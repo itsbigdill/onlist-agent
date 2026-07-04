@@ -16,13 +16,46 @@ import { verifyParts, type Verdict } from "./verify.js";
 const PORT = Number(process.env.PORT ?? 8080);
 
 const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
-<body style="font:16px/1.5 system-ui;max-width:640px;margin:40px auto;padding:0 16px">
-<h1>onlist-agent<span style="color:#DD7A51">.</span></h1>
+<body style="font:16px/1.55 system-ui;background:#F0EFEB;color:#1F2937;max-width:680px;margin:0 auto;padding:40px 20px">
+<h1 style="letter-spacing:-.01em">onlist-agent<span style="color:#DD7A51">.</span></h1>
 <p>Autopilot for selling real things: <b>capture → prove-it's-real → price → list → handle buyers</b>.
-Humans confirm every money decision.</p>
-<p>Endpoints: <code>POST /verify</code> · <code>POST /price</code> · <code>POST /triage</code> · <code>GET /health</code></p>
-<p>Powered by Qwen on Alibaba Cloud (${MODELS.text}, ${MODELS.vision}).
-First production consumer: <a href="https://www.onlist.ai">onlist.ai</a>.</p>`;
+Humans confirm every money decision. Powered by Qwen on Alibaba Cloud
+(${MODELS.vision} for vision, ${MODELS.text} + live web search).</p>
+
+<div style="background:#fff;border-radius:24px;padding:20px 22px;box-shadow:0 16px 42px rgba(31,41,55,.12)">
+  <h3 style="margin:0 0 10px">Verify 2.0 — try to fool it</h3>
+  <p style="font-size:14px;color:#6b7280;margin:0 0 12px">Pick 2–4 frames of one object
+  (or photos of a photo — watch it refuse). Nothing is stored.</p>
+  <input id="t" placeholder="listing title" style="width:100%;border:0;background:#F0EFEB;border-radius:14px;padding:12px 14px;font:inherit;margin-bottom:10px">
+  <input id="f" type="file" accept="image/*" multiple style="margin-bottom:12px">
+  <br><button id="go" style="border:0;background:#fff;box-shadow:0 10px 26px rgba(31,41,55,.14);border-radius:999px;padding:12px 26px;font:600 16px system-ui;cursor:pointer">Verify</button>
+  <pre id="out" style="white-space:pre-wrap;background:#F0EFEB;border-radius:14px;padding:14px;font-size:13px;display:none"></pre>
+</div>
+
+<p style="font-size:14px;color:#6b7280">Endpoints: <code>POST /verify</code> · <code>POST /price</code> ·
+<code>POST /triage</code> · <code>GET /health</code> ·
+First production consumer: <a href="https://www.onlist.ai" style="color:inherit">onlist.ai</a></p>
+
+<script>
+const read = (file) => new Promise((ok) => {
+  const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(file);
+});
+document.getElementById("go").onclick = async () => {
+  const out = document.getElementById("out");
+  out.style.display = "block";
+  out.textContent = "examining…";
+  const frames = await Promise.all([...document.getElementById("f").files].slice(0, 4).map(read));
+  const res = await fetch("/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: document.getElementById("t").value || "item", frames }),
+  });
+  const v = await res.json();
+  out.textContent = v.error ? v.error :
+    (v.samePhysicalObject && v.isRealScene && v.matchesTitle
+      ? "✓ VERIFIED — " : "⛔ REFUSED — ") + JSON.stringify(v, null, 2);
+};
+</script>`;
 
 // Verify over data-URLs (the CLI path reads files; HTTP takes them inline).
 const verifyDataURLs = (title: string, frames: string[]) =>

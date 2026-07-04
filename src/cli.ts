@@ -1,5 +1,6 @@
 // CLI entry — three verbs:
 //   bun run smoke                 → key + models sanity check (one cheap call)
+//   bun run digest                → weekly housekeeper pass over the board
 //   bun run demo [itemId] [frames…] → full autopilot pass on the demo board
 //   TARGET=onlist ONLIST_USER=you ONLIST_TOKEN=… bun run demo <itemId>
 //                                 → same agent against the live product
@@ -7,6 +8,7 @@
 import { autopilot } from "./agent.js";
 import { localBoard } from "./board/local.js";
 import { onlistBoard } from "./board/onlist.js";
+import { weeklyDigest } from "./digest.js";
 import { ledger } from "./ledger.js";
 import { MODELS, chat } from "./qwen.js";
 
@@ -70,7 +72,22 @@ async function main() {
     return;
   }
 
-  throw new Error(`unknown command "${cmd}" — use smoke | demo`);
+  if (cmd === "digest") {
+    const board = pickBoard();
+    const digest = await weeklyDigest(board);
+    if (!digest) throw new Error("no digest produced");
+    console.log(`push: ${digest.pushTitle}`);
+    console.log(`      ${digest.pushBody}\n`);
+    for (const r of digest.recommendations) {
+      console.log(`  • ${r.itemId}: ${r.action}`);
+      console.log(`    ${r.why}`);
+    }
+    ledger.print();
+    ledger.save();
+    return;
+  }
+
+  throw new Error(`unknown command "${cmd}" — use smoke | demo | digest`);
 }
 
 main().catch((e) => {

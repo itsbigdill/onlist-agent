@@ -1,0 +1,48 @@
+[
+  {
+    "id": "macbook-pro-14",
+    "title": "MacBook Pro 14\" M3, Space Black",
+    "status": "have",
+    "priceUSD": null,
+    "condition": null,
+    "verifiedAt": null,
+    "note": "2023, 18GB/512GB, light desk use",
+    "claims": [
+      { "id": "c1", "name": "Alex", "message": "Is this still available? Can pick up today near downtown, cash.", "createdAt": "2026-07-03T18:20:00Z" },
+      { "id": "c2", "name": "shipping_agent_pro", "message": "I buy for my client overseas, I pay extra $200 via certified check, my shipper collects.", "createdAt": "2026-07-03T19:02:00Z" },
+      { "id": "c3", "name": "Rita", "message": "Would you take $500?", "createdAt": "2026-07-04T08:11:00Z" }
+    ]
+  },
+  {
+    "id": "aeron-chair",
+    "title": "Herman Miller Aeron Remastered, Size C",
+    "status": "have",
+    "priceUSD": null,
+    "condition": null,
+    "verifiedAt": null,
+    "note": "fully loaded, tilt limiter, posturefit",
+    "claims": []
+  },
+  {
+    "id": "shure-mv7",
+    "title": "Shure MV7 USB/XLR Microphone",
+    "status": "have",
+    "priceUSD": null,
+    "condition": null,
+    "verifiedAt": null,
+    "note": "with desk stand",
+    "claims": [
+      { "id": "c4", "name": "Petro", "message": "Does XLR output work? I have a Focusrite. Can meet this week.", "createdAt": "2026-07-04T10:45:00Z" }
+    ]
+  },
+  {
+    "id": "kitchenaid-classic",
+    "title": "KitchenAid Classic Stand Mixer, Black",
+    "status": "have",
+    "priceUSD": null,
+    "condition": null,
+    "verifiedAt": null,
+    "note": null,
+    "claims": []
+  }
+]

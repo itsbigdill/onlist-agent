@@ -1,7 +1,7 @@
 {
   "name": "onlist-agent",
   "version": "0.1.0",
-  "description": "Autopilot for selling real things: capture \u2192 prove-it's-real \u2192 price \u2192 list \u2192 handle buyers. Powered by Qwen on Alibaba Cloud.",
+  "description": "Autopilot for selling real things: capture → prove-it's-real → price → list → handle buyers. Powered by Qwen on Alibaba Cloud.",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -9,7 +9,8 @@
     "demo": "bun src/cli.ts demo",
     "serve": "bun src/server.ts",
     "typecheck": "tsc --noEmit",
-    "digest": "bun src/cli.ts digest"
+    "digest": "bun src/cli.ts digest",
+    "bench": "bun bench/run.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -2,6 +2,14 @@
 
 Two easy paths — pick one, record the console + a curl in one take.
 
+> **HTTPS matters for the demo page.** The "live pass" camera capture
+> (getUserMedia) only works in a secure context. Bare ECS on `http://ip:8080`
+> still demos fine — the page falls back to per-shot "+ Add frame" capture and
+> says so — but for the full live-pass experience use **Function Compute**
+> (HTTPS out of the box, and a second Alibaba service on the diagram) or put
+> the ECS box behind a domain + Caddy. The QR block on the page always works:
+> judges on desktop scan it and continue on their phone.
+
 ## A. ECS (simplest to show)
 
 1. ECS console → create instance (ecs.t6, Ubuntu 24.04, HK/Singapore region

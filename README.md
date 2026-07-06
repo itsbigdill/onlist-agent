@@ -48,12 +48,16 @@ cp .env.example .env      # paste your DASHSCOPE_API_KEY
 # 3. sanity check — one cheap call
 bun run smoke
 
-# 4. full autopilot pass over the bundled demo board (no camera needed)
+# 4. full autopilot pass over the bundled demo board (no camera needed).
+#    The agent STOPS at the price checkpoint and asks you: [y / your price / n]
 bun run demo
+bun run demo --yes           # non-interactive (CI): auto-accepts the proposal
 
 # 5. the anti-fake gate, with your own frames (see seed/frames/README.md)
 bun run demo macbook-pro-14 seed/frames/1.jpg seed/frames/2.jpg
 ```
+
+No bun? `npx tsx src/cli.ts demo` runs the same on stock Node (verified).
 
 `bun run serve` starts the HTTP flavor (`/verify`, `/price`, `/triage`) —
 that's what runs on Alibaba Cloud in the deployment proof.

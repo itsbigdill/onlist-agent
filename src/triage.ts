@@ -37,7 +37,7 @@ export async function triageClaims(
   const text = await chat(
     `Listing: "${itemTitle}" at $${priceUSD}. Open claims:\n` +
       claims.map((c) => `- id=${c.id} from "${c.name}" at ${c.createdAt}: ${c.message ?? "(no message)"}`).join("\n"),
-    { model: MODELS.text, system: SYSTEM, stage: "triage", maxTokens: 900 },
+    { model: MODELS.balanced, system: SYSTEM, stage: "triage", maxTokens: 900, thinking: false },
   );
   const result = extractJSON<TriageResult>(text);
   if (!result || !Array.isArray(result.ranked)) return null;

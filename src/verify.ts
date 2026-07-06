@@ -9,6 +9,7 @@
 import { MODELS, chat, extractJSON, imagePart } from "./qwen.js";
 
 export interface Verdict {
+  itemName: string;              // what the object is, e.g. "Bluey kids thermos" — feeds pricing
   samePhysicalObject: boolean;   // all frames show ONE object, not lookalikes
   isRealScene: boolean;          // not a photo of a screen / print / catalog
   matchesTitle: boolean;         // the object is what the listing claims
@@ -26,10 +27,15 @@ around an object, plus the listing title. Judge strictly:
 - isRealScene: is this a real object in a real space — NOT a photo of a screen,
   a printed picture, or a catalog/press image re-shot? Moire, glare rectangles,
   pixel grids, paper texture, missing parallax are giveaways.
-- matchesTitle: is the object plausibly what the title claims?
-- condition and visible defects: describe only what you SEE.
+- matchesTitle: is the object plausibly what the title claims? (If the title is the
+  generic word "item", set matchesTitle true and just identify the object yourself.)
+- itemName: name the object as a seller would title a listing — brand + product when
+  recognizable ("Bluey stainless steel kids thermos", "Herman Miller Aeron chair").
+  Be careful and specific; do not guess a model you cannot see.
+- condition: a SHORT grade, 1-3 words only ("Like new", "Good", "Used, light wear").
+- defects: each a SHORT phrase, max 4 words ("scuffed lid", "rim staining"). Empty list if none.
 Answer with ONLY a JSON object:
-{"samePhysicalObject":bool,"isRealScene":bool,"matchesTitle":bool,
+{"itemName":"...","samePhysicalObject":bool,"isRealScene":bool,"matchesTitle":bool,
  "condition":"...","defects":["..."],"confidence":0..1,"reasoning":"..."}`;
 
 export async function verifyFrames(title: string, framePaths: string[]): Promise<Verdict | null> {
@@ -49,11 +55,12 @@ export async function verifyParts(
       ...images,
       { type: "text", text: `Listing title: "${title}". ${images.length} frames from one live capture pass.` },
     ],
-    { model: MODELS.vision, system: SYSTEM, stage: "verify", maxTokens: 800 },
+    { model: MODELS.vision, system: SYSTEM, stage: "verify", maxTokens: 800, thinking: false },
   );
   const verdict = extractJSON<Verdict>(text);
   if (!verdict) return null;
   return {
+    itemName: String(verdict.itemName ?? "").slice(0, 120),
     samePhysicalObject: Boolean(verdict.samePhysicalObject),
     isRealScene: Boolean(verdict.isRealScene),
     matchesTitle: Boolean(verdict.matchesTitle),

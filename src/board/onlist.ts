@@ -80,6 +80,12 @@ export function onlistBoard(username: string, token: string): Board {
       return (await this.list()).find((i) => i.id === id) ?? null;
     },
     async update(id, patch) {
+      // onlist's hard law, on purpose: verification is camera-gated on-device,
+      // so an agent can never set verified/condition on the live product. We
+      // say so out loud instead of silently pretending it stuck.
+      if (patch.verifiedAt !== undefined || patch.condition !== undefined) {
+        console.log("  (live onlist: verified/condition are camera-gated — agent patch skipped by design)");
+      }
       await mcpCall(token, "update_item", {
         id,
         ...(patch.status != null ? { status: patch.status } : {}),

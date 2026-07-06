@@ -2,17 +2,39 @@
 //   bun run smoke                 → key + models sanity check (one cheap call)
 //   bun run digest                → weekly housekeeper pass over the board
 //   bun run demo [itemId] [frames…] → full autopilot pass on the demo board
+//                                   (stops at the price checkpoint and asks YOU;
+//                                    add --yes for non-interactive/CI runs)
 //   TARGET=onlist ONLIST_USER=you ONLIST_TOKEN=… bun run demo <itemId>
 //                                 → same agent against the live product
+
+import { createInterface } from "node:readline/promises";
 
 import { autopilot } from "./agent.js";
 import { localBoard } from "./board/local.js";
 import { onlistBoard } from "./board/onlist.js";
 import { weeklyDigest } from "./digest.js";
 import { ledger } from "./ledger.js";
+import type { PriceCall } from "./price.js";
 import { MODELS, chat } from "./qwen.js";
 
-const cmd = process.argv[2] ?? "demo";
+const argv = process.argv.slice(2);
+const args = argv.filter((a) => !a.startsWith("--"));
+const autoYes = argv.includes("--yes");
+const cmd = args[0] ?? "demo";
+
+/** The human checkpoint, in the flesh: y / your own number / n. */
+async function askPrice(price: PriceCall): Promise<number | null> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const answer = (await rl.question(
+    `\n  ── HUMAN CHECKPOINT ─────────────────────────\n` +
+    `  agent proposes $${price.suggestedUSD} (floor $${price.floorUSD})\n` +
+    `  [y] list at $${price.suggestedUSD} · [number] your price · [n] keep unlisted > `,
+  )).trim();
+  rl.close();
+  if (/^y(es)?$/i.test(answer)) return price.suggestedUSD;
+  const custom = Number(answer);
+  return Number.isFinite(custom) && custom > 0 ? Math.round(custom) : null;
+}
 
 function pickBoard() {
   if (process.env.TARGET === "onlist") {
@@ -40,12 +62,14 @@ async function main() {
     const board = pickBoard();
     const items = await board.list();
     console.log(`board: ${board.label} — ${items.length} items`);
-    const itemId = process.argv[3] ?? items.find((i) => i.status === "have")?.id ?? items[0]?.id;
+    const itemId = args[1] ?? items.find((i) => i.status === "have")?.id ?? items[0]?.id;
     if (!itemId) throw new Error("board is empty");
-    const frames = process.argv.slice(4);
+    const frames = args.slice(2);
 
-    console.log(`\nautopilot → item ${itemId}${frames.length ? ` with ${frames.length} frames` : " (no frames)"}\n`);
-    const report = await autopilot(board, itemId, frames);
+    console.log(`\nautopilot → item ${itemId}${frames.length ? ` with ${frames.length} frames` : " (no frames)"}` +
+      `${autoYes ? " [--yes: price auto-accepted]" : ""}\n`);
+    const report = await autopilot(board, itemId, frames,
+      autoYes ? {} : { confirmPrice: askPrice });
 
     console.log(`item: ${report.item.title}`);
     if (report.verdict) {

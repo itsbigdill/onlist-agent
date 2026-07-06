@@ -11,7 +11,8 @@ const BASE = process.env.DASHSCOPE_BASE_URL
   ?? "https://dashscope-intl.aliyuncs.com/compatible-mode/v1";
 
 export const MODELS = {
-  text: process.env.QWEN_TEXT_MODEL ?? "qwen3.7-max",
+  text: process.env.QWEN_TEXT_MODEL ?? "qwen3.7-max",        // reserved for depth-critical stages
+  balanced: process.env.QWEN_BALANCED_MODEL ?? "qwen3.7-plus", // 5x cheaper; default workhorse
   vision: process.env.QWEN_VISION_MODEL ?? "qwen3.7-plus",
   flash: process.env.QWEN_FLASH_MODEL ?? "qwen3.6-flash",
 };
@@ -33,6 +34,9 @@ export interface ChatOptions {
   system?: string;
   /** DashScope extension: let the model search the web before answering. */
   enableSearch?: boolean;
+  /** false → enable_thinking:false. Cuts vision verdicts from ~45s to ~7s;
+      keep thinking ON where depth beats speed (pricing with web search). */
+  thinking?: boolean;
   temperature?: number;
   maxTokens?: number;
   /** Ledger label, e.g. "verify" | "price" | "triage". */
@@ -56,7 +60,10 @@ export async function chat(user: ChatContent, opts: ChatOptions): Promise<string
       messages,
       temperature: opts.temperature ?? 0.2,
       max_tokens: opts.maxTokens ?? 1200,
-      ...(opts.enableSearch ? { enable_search: true } : {}),
+      // enable_search alone is only a permission the model rarely uses;
+      // forced_search actually triggers the web call (verified July 5).
+      ...(opts.enableSearch ? { enable_search: true, search_options: { forced_search: true } } : {}),
+      ...(opts.thinking === false ? { enable_thinking: false } : {}),
     }),
   });
   if (!res.ok) {

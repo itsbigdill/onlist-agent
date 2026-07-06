@@ -25,7 +25,7 @@ export async function priceItem(title: string, verdict: Verdict | null): Promise
     : "Condition unverified.";
   const text = await chat(
     `Item: "${title}". ${condition} Find comparable current listings/sold prices and propose pricing.`,
-    { model: MODELS.text, system: SYSTEM, enableSearch: true, stage: "price", maxTokens: 900 },
+    { model: MODELS.balanced, system: SYSTEM, enableSearch: true, stage: "price", maxTokens: 900, thinking: false },
   );
   const call = extractJSON<PriceCall>(text);
   if (!call || !Number.isFinite(Number(call.suggestedUSD))) return null;

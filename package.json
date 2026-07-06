@@ -10,7 +10,9 @@
     "serve": "bun src/server.ts",
     "typecheck": "tsc --noEmit",
     "digest": "bun src/cli.ts digest",
-    "bench": "bun bench/run.ts"
+    "bench": "bun bench/run.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

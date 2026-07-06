@@ -15,7 +15,9 @@ import { priceItem } from "./price.js";
 import { triageClaims } from "./triage.js";
 import { verifyParts, type Verdict } from "./verify.js";
 
-const PORT = Number(process.env.PORT ?? 8080);
+// FC_SERVER_PORT is set by Alibaba Function Compute custom runtimes; PORT for
+// generic hosts; 8080 for local. Listens on 0.0.0.0 so it works in a container.
+const PORT = Number(process.env.FC_SERVER_PORT ?? process.env.PORT ?? 8080);
 
 // LAN address for the QR: a phone scanning a QR that encodes "localhost"
 // would try to connect to itself. Always advertise a reachable host.
@@ -50,8 +52,12 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #shoot svg { width: 40px; height: 40px; color: #DD7A51; }
   #shoot b { font-size: 18px; }
   #shoot small { color: rgba(31,41,55,.5); }
-  #tray { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
-  #tray img { width: 60px; height: 60px; object-fit: cover; border-radius: 12px; }
+  #slots { display: flex; gap: 12px; justify-content: center; margin-top: 4px; }
+  #slots:empty { display: none; }
+  #slots .slot { width: 66px; height: 66px; border-radius: 14px; }
+  #slots .slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
+  #slots .ph { border: 2px dashed rgba(31,41,55,.25); display: flex; align-items: center;
+               justify-content: center; color: rgba(31,41,55,.3); font-size: 26px; font-weight: 300; }
 
   #busy { display: none; text-align: center; padding: 60px 0; }
   .spin { width: 34px; height: 34px; border: 3px solid rgba(31,41,55,.15);
@@ -104,16 +110,25 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
             border-radius: 999px; padding: 3px 9px; display: inline-block; margin-top: 4px; }
   .sect { text-align: left; font-size: 13px; font-weight: 700; color: rgba(31,41,55,.5);
           margin: 22px 0 8px; }
-  .buyer { text-align: left; border: 1px solid rgba(31,41,55,.1); border-radius: 16px;
-           padding: 13px 14px; margin-top: 10px; }
-  .buyer.top { border-color: #2E7D5B; background: #FbFdFb; }
-  .buyer .bhead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .buyer .bname { font-weight: 700; }
-  .buyer .score { font-weight: 800; font-size: 13px; }
-  .buyer .reply { font-size: 13px; color: rgba(31,41,55,.6); margin-top: 8px;
-                  background: #F0EFEB; border-radius: 12px; padding: 9px 11px; }
-  .buyer .accept { margin-top: 10px; width: 100%; border: 0; background: #2E7D5B; color: #fff;
-                   border-radius: 12px; padding: 11px; font: 700 14px -apple-system, system-ui; cursor: pointer; }
+  .buyer { display: flex; align-items: center; gap: 11px; text-align: left;
+           background: #F7F6F2; border-radius: 14px; padding: 12px 13px; margin-top: 9px; }
+  .buyer.bad { opacity: .5; }
+  .buyer.bad .bname { text-decoration: line-through; }
+  .bic { width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%; color: #fff;
+         display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+  .buyer.good .bic { background: #2E7D5B; }
+  .buyer.mid .bic { background: #C98A2B; }
+  .buyer.bad .bic { background: #C0503C; }
+  .bmain { flex: 1; }
+  .bmain .bname { font-weight: 700; font-size: 15px; }
+  .bmain .bword { font-size: 12px; color: rgba(31,41,55,.5); }
+  .bscore { font-weight: 800; font-size: 13px; color: rgba(31,41,55,.45); }
+  .topreply { text-align: left; font-size: 13px; color: rgba(31,41,55,.62); background: #fff;
+              border-radius: 12px; padding: 11px 13px; margin-top: 12px; }
+  .topreply b { color: rgba(31,41,55,.5); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  #accept { margin-top: 12px; width: 100%; border: 0; background: #2E7D5B; color: #fff;
+            border-radius: 14px; padding: 14px; font: 700 15px -apple-system, system-ui; cursor: pointer; }
+  #accept:disabled { opacity: 1; background: #E4F1E9; color: #2E7D5B; }
   #doneNote { font-size: 14px; color: rgba(31,41,55,.55); margin-top: 8px; }
 
   .foot { display: block; text-align: center; font-size: 12px; color: rgba(31,41,55,.38);
@@ -131,10 +146,10 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
 <div id="app">
   <label id="shoot">
     <input id="cap" type="file" accept="image/*" capture="environment" hidden>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
+    <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
     <b id="shootLabel">Photograph your item</b>
-    <small id="shootHint">two angles — tap to start</small>
-    <div id="tray"></div>
+    <div id="slots"></div>
+    <small id="shootHint"></small>
   </label>
 
   <div id="busy"><div class="spin"></div><span id="busyLabel">Checking if it's real…</span></div>
@@ -164,8 +179,10 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
       <div><div id="mItem"></div><span class="vbadge">✓ verified real</span></div>
       <div class="lp" id="mPrice"></div>
     </div>
-    <div class="sect">The agent is screening buyers</div>
+    <div class="sect">The agent screened your buyers</div>
     <div id="buyers"></div>
+    <div id="topreply" class="topreply" hidden></div>
+    <button id="accept" hidden>Accept top buyer</button>
     <button id="again3" class="ghostbtn" style="margin-top:16px">Done</button>
   </div>
 </div>
@@ -195,8 +212,24 @@ function shrink(file) {
 var verdict = null;
 var lastPrice = null;
 
-function renderTray() {
-  $("tray").innerHTML = frames.map(function (d) { return '<img src="' + d + '">'; }).join("");
+// Two-slot shoot UI: filled thumbnails + a dashed placeholder for what's still needed.
+function renderShoot() {
+  var slots = "";
+  if (frames.length) {
+    for (var i = 0; i < 2; i++) {
+      slots += frames[i]
+        ? '<div class="slot"><img src="' + frames[i] + '"></div>'
+        : '<div class="slot ph">+</div>';
+    }
+  }
+  $("slots").innerHTML = slots;
+  if (frames.length === 0) {
+    $("shootIcon").style.display = ""; $("shootLabel").style.display = "";
+    $("shootLabel").textContent = "Photograph your item"; $("shootHint").textContent = "";
+  } else if (frames.length === 1) {
+    $("shootIcon").style.display = "none"; $("shootLabel").style.display = "none";
+    $("shootHint").textContent = "1 more photo required";
+  }
 }
 function chip(text, cls) { return '<span class="' + cls + '">' + text + '</span>'; }
 function esc(s) { return String(s).replace(/[<>&]/g, function (c) { return { "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]; }); }
@@ -214,13 +247,8 @@ $("cap").onchange = function () {
   if (!f) return;
   shrink(f).then(function (d) {
     if (!d) return;
-    frames.push(d); renderTray();
-    if (frames.length === 1) {
-      $("shootLabel").textContent = "One more angle";
-      $("shootHint").textContent = "tap again from a different side";
-    } else {
-      verify();
-    }
+    frames.push(d); renderShoot();
+    if (frames.length >= 2) verify();
   });
 };
 
@@ -304,29 +332,42 @@ $("list").onclick = function () {
     body: JSON.stringify({ title: itemName(), priceUSD: lastPrice ? lastPrice.suggestedUSD : 0, claims: DEMO_BUYERS }),
   }).then(function (r) { return r.json(); }).then(function (t) {
     var ranked = (t && t.ranked) || [];
-    $("buyers").innerHTML = ranked.map(function (b, i) {
+    // classify each buyer into good / lowball / scam from score + flags
+    function verdictOf(b) {
+      var scam = b.score <= 15 || (b.flags || []).some(function (f) { return /scam|overpay|shipping|check|fraud/i.test(f); });
+      if (scam) return { cls: "bad", ic: "✕", word: "Likely scam — skip" };
+      if (b.score >= 70) return { cls: "good", ic: "✓", word: "Solid — ready to meet" };
+      return { cls: "mid", ic: "~", word: "Lowballing" };
+    }
+    $("buyers").innerHTML = ranked.map(function (b) {
       var who = (DEMO_BUYERS.filter(function (d) { return d.id === b.id; })[0] || {}).name || b.id;
-      var flags = (b.flags || []).map(function (f) { return chip(esc(f), "c-coral"); }).join("");
-      var acc = i === 0 ? '<button class="accept">Accept top buyer</button>' : "";
-      return '<div class="buyer' + (i === 0 ? " top" : "") + '">' +
-        '<div class="bhead"><span class="bname">' + esc(who) + '</span><span class="score">' + b.score + '/100</span></div>' +
-        '<div class="chips" style="justify-content:flex-start;margin-top:8px">' + flags + '</div>' +
-        '<div class="reply">' + esc(b.draftReply || "") + '</div>' + acc + '</div>';
+      var v = verdictOf(b);
+      return '<div class="buyer ' + v.cls + '"><span class="bic">' + v.ic + '</span>' +
+        '<div class="bmain"><div class="bname">' + esc(who) + '</div>' +
+        '<div class="bword">' + v.word + '</div></div><span class="bscore">' + b.score + '</span></div>';
     }).join("");
-    var top = (ranked[0] && (DEMO_BUYERS.filter(function (d) { return d.id === ranked[0].id; })[0] || {}).name) || "buyer";
-    var accBtn = $("buyers").querySelector(".accept");
-    if (accBtn) accBtn.onclick = function () { this.textContent = "✓ Accepted — meeting " + top; this.disabled = true; };
+    // only the top buyer gets a drafted reply + an accept button
+    var top = ranked[0];
+    if (top && top.score >= 70) {
+      var who = (DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {}).name || "buyer";
+      $("topreply").innerHTML = "<b>Drafted reply to " + esc(who) + "</b><br>" + esc(top.draftReply || "");
+      $("topreply").hidden = false;
+      $("accept").hidden = false;
+      $("accept").disabled = false;
+      $("accept").textContent = "Accept " + who;
+      $("accept").onclick = function () { this.textContent = "✓ Accepted — meeting " + who; this.disabled = true; };
+    } else {
+      $("topreply").hidden = true; $("accept").hidden = true;
+    }
     panel("manage");
   }).catch(function () {
-    $("buyers").innerHTML = '<div class="reply">Buyer screening runs in the app.</div>';
+    $("buyers").innerHTML = ""; $("topreply").hidden = true; $("accept").hidden = true;
     panel("manage");
   });
 };
 
 function reset() {
-  frames = []; verdict = null; lastPrice = null; renderTray();
-  $("shootLabel").textContent = "Photograph your item";
-  $("shootHint").textContent = "two angles — tap to start";
+  frames = []; verdict = null; lastPrice = null; renderShoot();
   panel("shoot");
 }
 $("again").onclick = reset;
@@ -415,4 +456,4 @@ createServer(async (req, res) => {
   } catch (e) {
     json(res, e instanceof BodyTooLarge ? 413 : 500, { error: String((e as Error).message ?? e) });
   }
-}).listen(PORT, () => console.log(`onlist-agent listening on :${PORT}${LAN_URL ? ` → ${LAN_URL}` : ""}`));
+}).listen(PORT, "0.0.0.0", () => console.log(`onlist-agent listening on :${PORT}${LAN_URL ? ` → ${LAN_URL}` : ""}`));

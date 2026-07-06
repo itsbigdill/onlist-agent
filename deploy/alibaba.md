@@ -1,47 +1,68 @@
-# Deploying to Alibaba Cloud (proof-of-deployment recording)
+# Deploy to Alibaba Cloud — Function Compute (for the proof-of-deployment recording)
 
-Two easy paths — pick one, record the console + a curl in one take.
+The agent's HTTP service runs on **Alibaba Function Compute (FC)**: serverless,
+HTTPS out of the box (so the live-camera demo works), generous free tier. It uses
+**Qwen on Alibaba Cloud** for every model call, so one region keeps latency low.
 
-> **HTTPS matters for the demo page.** The "live pass" camera capture
-> (getUserMedia) only works in a secure context. Bare ECS on `http://ip:8080`
-> still demos fine — the page falls back to per-shot "+ Add frame" capture and
-> says so — but for the full live-pass experience use **Function Compute**
-> (HTTPS out of the box, and a second Alibaba service on the diagram) or put
-> the ECS box behind a domain + Caddy. The QR block on the page always works:
-> judges on desktop scan it and continue on their phone.
+Runs on plain **Node.js** — no Bun, no Docker needed for FC.
 
-## A. ECS (simplest to show)
+## 0. Build the Node bundle (local, once)
 
-1. ECS console → create instance (ecs.t6, Ubuntu 24.04, HK/Singapore region
-   works well with dashscope-intl) → allow port 8080 in the security group.
-2. SSH in and run:
+```bash
+npm install            # dev-only: typescript + @types/node
+npm run build          # tsc → dist/*.js  (pure ESM, Node 18+)
+```
+
+`dist/` is what FC runs (`node dist/server.js`).
+
+## 1. Create the function (FC console)
+
+Function Compute → **Create Function** → **Web Function**:
+
+- Runtime: **Node.js 20**
+- Code: upload the project (or the `dist/` + `package.json`) as a zip, OR point FC
+  at the public repo. Startup command: `node dist/server.js`
+- **Listen port: 9000** (the server reads `FC_SERVER_PORT`, which FC sets to 9000)
+- Instance: smallest (0.35 vCPU / 512 MB is plenty)
+- Timeout: 120 s (pricing + web search can take ~10 s; headroom is safe)
+
+## 2. Environment variable
+
+Function → Configuration → Environment Variables:
+
+```
+DASHSCOPE_API_KEY = sk-...        # your Qwen Cloud key
+```
+
+(Optional: `QWEN_TEXT_MODEL`, `QWEN_VISION_MODEL` to override models.)
+
+## 3. Enable the HTTPS URL
+
+Function → Triggers → the built-in **HTTP trigger** → note the public
+`https://<...>.fcapp.run` URL. Auth: anonymous (it's a public demo).
+
+## 4. Multi-service touch — OSS for audit artifacts (optional, recommended)
+
+Create an **OSS bucket** (`onlist-agent-audit`) and set `AUDIT_OSS_BUCKET` — the
+agent writes each run's ledger + verdict there. Two Alibaba services (FC + OSS)
+on the diagram reads as real architecture, not a single API call.
+
+## Proof-of-deployment recording (hackathon requirement, ~90 s, one take)
+
+1. FC console: the function **running**, its HTTPS URL visible.
+2. In a browser: open the HTTPS URL → the demo page loads; hit `/health` → JSON
+   with the Qwen model ids.
+3. `curl -X POST https://<url>/price -H 'Content-Type: application/json' -d '{"title":"Shure MV7 microphone"}'`
+   → a real Qwen-powered price with live web-search comps.
+4. Editor: `src/qwen.ts` visible — the DashScope base URL + Qwen model calls.
+
+## Alternative: ECS (if you prefer a VM)
 
 ```bash
 curl -fsSL https://bun.sh/install | bash && source ~/.bashrc
-git clone https://github.com/<you>/onlist-agent && cd onlist-agent
-bun install
-export DASHSCOPE_API_KEY=sk-...
-nohup bun src/server.ts > agent.log 2>&1 &
+git clone https://github.com/itsbigdill/onlist-agent && cd onlist-agent
+bun install && export DASHSCOPE_API_KEY=sk-...
+nohup bun src/server.ts > agent.log 2>&1 &   # http://<ecs-ip>:8080
 ```
 
-3. On camera:
-
-```bash
-curl http://<ecs-ip>:8080/health
-curl -X POST http://<ecs-ip>:8080/price \
-  -H 'Content-Type: application/json' \
-  -d '{"title":"Shure MV7 USB/XLR Microphone"}'
-```
-
-## B. Container (ACR + ECS/FC)
-
-```bash
-docker build -t onlist-agent .
-docker tag onlist-agent registry-intl.<region>.aliyuncs.com/<ns>/onlist-agent
-docker push registry-intl.<region>.aliyuncs.com/<ns>/onlist-agent
-# then run it on ECS: docker run -e DASHSCOPE_API_KEY=... -p 8080:8080 <image>
-```
-
-Recording checklist (per hackathon rules): Alibaba Cloud console visible →
-the running service → curl with a real Qwen-powered response → the code with
-DashScope calls (src/qwen.ts) in the editor.
+HTTP only (fine for the proof); for the live-camera pass you'd add a domain + TLS.

@@ -37,30 +37,31 @@ tokens and dollars per stage, printed after each run.
 
 ## Quickstart (≈3 minutes)
 
+**With Bun** (auto-loads `.env`):
+
 ```bash
-# 1. install bun (or use node 22+: npx tsx src/cli.ts …)
-curl -fsSL https://bun.sh/install | bash
-
-# 2. configure
+curl -fsSL https://bun.sh/install | bash   # if you don't have bun
 bun install
-cp .env.example .env      # paste your DASHSCOPE_API_KEY
-
-# 3. sanity check — one cheap call
-bun run smoke
-
-# 4. full autopilot pass over the bundled demo board (no camera needed).
-#    The agent STOPS at the price checkpoint and asks you: [y / your price / n]
-bun run demo
+cp .env.example .env         # paste your DASHSCOPE_API_KEY
+bun run smoke                # one cheap call — verifies the key
+bun run demo                 # full autopilot pass; stops at the price checkpoint [y / your price / n]
 bun run demo --yes           # non-interactive (CI): auto-accepts the proposal
-
-# 5. the anti-fake gate, with your own frames (see seed/frames/README.md)
-bun run demo macbook-pro-14 seed/frames/1.jpg seed/frames/2.jpg
+bun run demo macbook-pro-14 seed/frames/1.jpg seed/frames/2.jpg   # anti-fake gate on your own frames
 ```
 
-No bun? `npx tsx src/cli.ts demo` runs the same on stock Node (verified).
+**With plain Node** (18+, no Bun — same code, compiled):
 
-`bun run serve` starts the HTTP flavor (`/verify`, `/price`, `/triage`) —
-that's what runs on Alibaba Cloud in the deployment proof.
+```bash
+npm install
+npm run build                # tsc → dist/*.js
+export DASHSCOPE_API_KEY=sk-...
+node dist/cli.js smoke
+node dist/server.js          # HTTP service on :8080
+```
+
+`bun run serve` / `node dist/server.js` starts the HTTP flavor
+(`/verify`, `/price`, `/triage`, a phone-first demo page) — that's what runs on
+Alibaba **Function Compute** in the deployment proof. See [deploy/alibaba.md](deploy/alibaba.md).
 
 ## Live mode — the first production consumer
 

@@ -17,6 +17,7 @@ export interface TriageResult {
     score: number;          // 0..100, likelihood of a clean, fast sale
     flags: string[];        // "lowball" | "scam-pattern" | "no-show risk" | ...
     draftReply: string;     // ready to send after human review
+    counterUSD: number | null; // lowball → agent's counter-offer, NEVER below the floor
   }>;
   summary: string;
 }
@@ -25,30 +26,58 @@ const SYSTEM = `You triage buyer claims for a second-hand listing. Score each cl
 0-100 for likelihood of a clean local sale (specific message, realistic intent,
 no scam patterns like overpayment/shipping-agent/gift-card talk). Draft a short,
 warm, non-committal reply for each (the seller reviews before sending; never
-promise to hold an item or accept a price). Answer with ONLY JSON:
-{"ranked":[{"id":"...","score":0,"flags":["..."],"draftReply":"..."}],"summary":"..."}`;
+promise to hold an item or accept a price).
+
+Negotiation authority: you may counter a low offer, but only within the seller's
+delegated bounds. If a buyer offers below asking and is NOT a scam, set counterUSD
+to a fair middle number (never below the private floor, never above asking) and
+write the counter into that buyer's draftReply. NEVER state, hint at, or imply the
+floor itself in any reply. Scams get no counter (counterUSD null). Buyers at or
+above asking need no counter (null). Answer with ONLY JSON:
+{"ranked":[{"id":"...","score":0,"flags":["..."],"draftReply":"...","counterUSD":number|null}],"summary":"..."}`;
 
 export async function triageClaims(
   itemTitle: string,
   priceUSD: number,
   claims: Claim[],
+  floorUSD?: number | null,
 ): Promise<TriageResult | null> {
   if (!claims.length) return { ranked: [], summary: "No open claims." };
+  const floorLine = floorUSD != null && Number.isFinite(floorUSD)
+    ? ` The seller's PRIVATE floor is $${Math.round(floorUSD)} — counters must respect it, replies must never reveal it.`
+    : " No floor was delegated — do not make counter-offers (counterUSD null everywhere).";
   const text = await chat(
-    `Listing: "${itemTitle}" at $${priceUSD}. Open claims:\n` +
+    `Listing: "${itemTitle}" at $${priceUSD}.${floorLine} Open claims:\n` +
       claims.map((c) => `- id=${c.id} from "${c.name}" at ${c.createdAt}: ${c.message ?? "(no message)"}`).join("\n"),
-    { model: MODELS.balanced, system: SYSTEM, stage: "triage", maxTokens: 900, thinking: false },
+    { model: MODELS.balanced, system: SYSTEM, stage: "triage", maxTokens: 900, thinking: false, json: true },
   );
   const result = extractJSON<TriageResult>(text);
   if (!result || !Array.isArray(result.ranked)) return null;
   return {
     ranked: result.ranked
-      .map((r) => ({
-        id: String(r.id),
-        score: Math.max(0, Math.min(100, Number(r.score) || 0)),
-        flags: Array.isArray(r.flags) ? r.flags.map(String).slice(0, 4) : [],
-        draftReply: String(r.draftReply ?? "").slice(0, 400),
-      }))
+      .map((r) => {
+        // Delegated authority is enforced in CODE, not trusted to the prompt:
+        // counters exist ONLY for claims the agent itself flagged as lowballs,
+        // never for scam patterns; below-floor is raised to the floor; at-or-
+        // above asking is dropped as pointless.
+        const flags = Array.isArray(r.flags) ? r.flags.map(String) : [];
+        const isLowball = flags.some((f) => /low.?ball|low.?offer/i.test(f));
+        const isScammy = flags.some((f) => /scam|fraud|overpay|shipping|check|gift.?card/i.test(f));
+        let counter: number | null = Number.isFinite(Number(r.counterUSD)) ? Math.round(Number(r.counterUSD)) : null;
+        if (!isLowball || isScammy) counter = null;
+        if (counter != null) {
+          if (floorUSD != null && Number.isFinite(floorUSD)) counter = Math.max(counter, Math.round(floorUSD));
+          else counter = null;                       // no floor → no authority to counter
+          if (counter != null && counter >= Math.round(priceUSD)) counter = null;  // pointless counter
+        }
+        return {
+          id: String(r.id),
+          score: Math.max(0, Math.min(100, Number(r.score) || 0)),
+          flags: flags.slice(0, 4),
+          draftReply: String(r.draftReply ?? "").slice(0, 400),
+          counterUSD: counter,
+        };
+      })
       .sort((a, b) => b.score - a.score),
     summary: String(result.summary ?? "").slice(0, 300),
   };

@@ -61,7 +61,7 @@ export async function verifyParts(
       ...images,
       { type: "text", text: `Listing title: "${title}". ${images.length} frames from one live capture pass.${note ? " " + note : ""}` },
     ],
-    { model: MODELS.vision, system: SYSTEM, stage: "verify", maxTokens: 800, thinking: false },
+    { model: MODELS.vision, system: SYSTEM, stage: "verify", maxTokens: 800, thinking: false, json: true },
   );
   const verdict = extractJSON<Verdict>(text);
   if (!verdict) return null;

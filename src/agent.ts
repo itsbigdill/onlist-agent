@@ -80,7 +80,12 @@ export async function autopilot(
 
   // 4. Handle buyers: rank claims, draft replies. Accept/decline stays human.
   const triage = await triageClaims(
-    item.title, listedAtUSD ?? price?.suggestedUSD ?? item.priceUSD ?? 0, item.claims);
+    item.title, listedAtUSD ?? price?.suggestedUSD ?? item.priceUSD ?? 0, item.claims,
+    price?.floorUSD ?? null);
+  const counters = triage?.ranked.filter((r) => r.counterUSD != null) ?? [];
+  if (counters.length) {
+    actions.push(`countered ${counters.length} low offer(s) within the delegated floor ($${price?.floorUSD}) — drafts await human review`);
+  }
   if (triage && triage.ranked.length) {
     actions.push(`${triage.ranked.length} claims triaged; top: ${triage.ranked[0].id} (${triage.ranked[0].score})`);
   }

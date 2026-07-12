@@ -66,3 +66,22 @@ nohup bun src/server.ts > agent.log 2>&1 &   # http://<ecs-ip>:8080
 ```
 
 HTTP only (fine for the proof); for the live-camera pass you'd add a domain + TLS.
+
+## Evidence locker (OSS) — optional but recommended
+
+Every verification can write an immutable audit record (frames + verdict JSON)
+to OSS: `evidence/<timestamp-id>/`. Enable by setting on the function:
+
+- `OSS_BUCKET` — a bucket in the same region (e.g. `onlist-evidence`)
+- `OSS_ENDPOINT` — default `oss-ap-southeast-1.aliyuncs.com`
+- `ALIBABA_ACCESS_KEY_ID` / `ALIBABA_ACCESS_KEY_SECRET` — a RAM user with
+  `AliyunOSSFullAccess` (or a bucket-scoped policy)
+
+Unset → the feature is silently off; the demo runs unchanged.
+
+## Weekly housekeeper on a schedule
+
+`GET/POST /digest` runs the housekeeping agent over the board and returns the
+push + per-item recommendations. Point any scheduler at it — an FC Timer
+trigger, or an external cron — weekly. The agent acts without being asked;
+the human still owns every action it recommends.

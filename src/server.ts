@@ -14,6 +14,9 @@ import { MODELS } from "./qwen.js";
 import { priceItem } from "./price.js";
 import { triageClaims } from "./triage.js";
 import { verifyAgentic, type Prior, type Verdict } from "./verify.js";
+import { recordEvidence, evidenceEnabled } from "./evidence.js";
+import { weeklyDigest } from "./digest.js";
+import { localBoard } from "./board/local.js";
 
 // FC_SERVER_PORT is set by Alibaba Function Compute custom runtimes; PORT for
 // generic hosts; 8080 for local. Listens on 0.0.0.0 so it works in a container.
@@ -348,7 +351,8 @@ $("list").onclick = function () {
   panel("busy", "The agent is screening buyers…");
   fetch("/triage", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: itemName(), priceUSD: lastPrice ? lastPrice.suggestedUSD : 0, claims: DEMO_BUYERS }),
+    body: JSON.stringify({ title: itemName(), priceUSD: lastPrice ? lastPrice.suggestedUSD : 0,
+                           floorUSD: lastPrice ? lastPrice.floorUSD : null, claims: DEMO_BUYERS }),
   }).then(function (r) { return r.json(); }).then(function (t) {
     var ranked = (t && t.ranked) || [];
     // classify each buyer into good / lowball / scam from score + flags
@@ -356,6 +360,7 @@ $("list").onclick = function () {
       var scam = b.score <= 15 || (b.flags || []).some(function (f) { return /scam|overpay|shipping|check|fraud/i.test(f); });
       if (scam) return { cls: "bad", ic: "✕", word: "Likely scam — skip" };
       if (b.score >= 70) return { cls: "good", ic: "✓", word: "Solid — ready to meet" };
+      if (b.counterUSD) return { cls: "mid", ic: "~", word: "Lowball — agent counters at $" + b.counterUSD };
       return { cls: "mid", ic: "~", word: "Lowballing" };
     }
     $("buyers").innerHTML = ranked.map(function (b) {
@@ -461,8 +466,14 @@ createServer(async (req, res) => {
       const prior = round === 2 && pr
         ? { reasoning: String(pr.reasoning ?? ""), request: String(pr.request ?? "") }
         : undefined;
-      const verdict = await verifyDataURLs(
-        String(b.title ?? ""), Array.isArray(b.frames) ? b.frames.map(String) : [], round, prior);
+      const frames = Array.isArray(b.frames) ? b.frames.map(String) : [];
+      const verdict = await verifyDataURLs(String(b.title ?? ""), frames, round, prior);
+      if (verdict && evidenceEnabled()) {
+        // immutable audit trail on OSS — fire-and-forget, never blocks the phone
+        recordEvidence(verdict as unknown as Record<string, unknown>, frames)
+          .then((k) => k && console.log(`evidence → oss://${process.env.OSS_BUCKET}/${k}`))
+          .catch((e) => console.warn("evidence write failed:", (e as Error).message));
+      }
       return json(res, verdict ? 200 : 422, verdict ?? { error: "no verdict" });
     }
     if (req.method === "POST" && req.url === "/price") {
@@ -474,10 +485,15 @@ createServer(async (req, res) => {
       const b = await readBody(req);
       const result = await triageClaims(
         String(b.title ?? ""),
-        Number(b.priceUSD ?? 0),
-        Array.isArray(b.claims) ? (b.claims as never[]) : [],
+        Number(b.priceUSD) || 0,
+        Array.isArray(b.claims) ? b.claims as never[] : [],
+        Number.isFinite(Number(b.floorUSD)) ? Number(b.floorUSD) : null,
       );
       return json(res, result ? 200 : 422, result ?? { error: "no triage" });
+    }
+    if (req.url === "/digest" && (req.method === "GET" || req.method === "POST")) {
+      const digest = await weeklyDigest(localBoard());
+      return json(res, digest ? 200 : 422, digest ?? { error: "no digest" });
     }
     json(res, 404, { error: "not found" });
   } catch (e) {

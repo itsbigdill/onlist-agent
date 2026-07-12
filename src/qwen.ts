@@ -39,6 +39,9 @@ export interface ChatOptions {
   thinking?: boolean;
   temperature?: number;
   maxTokens?: number;
+  /** Ask DashScope for a guaranteed JSON object (response_format). Keep
+      extractJSON as the belt to this suspender. */
+  json?: boolean;
   /** Ledger label, e.g. "verify" | "price" | "triage". */
   stage: string;
 }
@@ -63,6 +66,7 @@ export async function chat(user: ChatContent, opts: ChatOptions): Promise<string
       // enable_search alone is only a permission the model rarely uses;
       // forced_search actually triggers the web call (verified July 5).
       ...(opts.enableSearch ? { enable_search: true, search_options: { forced_search: true } } : {}),
+      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
       ...(opts.thinking === false ? { enable_thinking: false } : {}),
     }),
   });

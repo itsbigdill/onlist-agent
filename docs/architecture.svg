@@ -1,0 +1,126 @@
+<svg width="100%" viewBox="0 0 1080 800" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, system-ui, sans-serif" role="img">
+<title>onlist-agent system architecture</title>
+<desc>A phone captures live frames and sends them to a Node.js agent on Alibaba Function Compute. The agent verifies physical authenticity with a self-correction loop, prices with live web search, lists, and triages buyers with counter-offers bounded by a delegated floor. Qwen models run on Alibaba Model Studio; an optional OSS evidence locker stores immutable audit records. Humans confirm every money decision.</desc>
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8B8B83"/></marker>
+<marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2E7D5B"/></marker>
+<marker id="aa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#C08A1E"/></marker>
+</defs>
+<rect x="0" y="0" width="1080" height="800" rx="20" fill="#F5F5F1"/>
+
+<text x="44" y="52" font-size="30" font-weight="800" letter-spacing="-.5" fill="#1F2937">onlist-agent<tspan fill="#2E7D5B">.</tspan></text>
+<text x="240" y="52" font-size="14.5" fill="#6B7280">autopilot for selling real things — refuses anything it can't prove is physical</text>
+
+<rect x="392" y="88" width="296" height="60" rx="13" fill="#FFFFFF" stroke="#DDDDD4" stroke-width="1.5"/>
+<text x="540" y="114" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">Phone · live capture pass</text>
+<text x="540" y="133" text-anchor="middle" font-size="11.5" fill="#8B8B83">2–4 frames, camera only — no uploads from gallery</text>
+
+<line x1="540" y1="148" x2="540" y2="186" stroke="#8B8B83" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="552" y="172" font-size="11.5" fill="#6B7280">HTTPS · agent.onlist.ai (Cloudflare)</text>
+
+<rect x="40" y="190" width="1000" height="352" rx="16" fill="#E9F1EC" stroke="#2E7D5B" stroke-width="2"/>
+<text x="60" y="218" font-size="13.5" font-weight="800" fill="#22604A">ALIBABA FUNCTION COMPUTE — Node.js web function · Singapore · zero runtime deps</text>
+<text x="60" y="236" font-size="11.5" fill="#5F8A76">every model call metered into a cost ledger (tokens + $ per stage)</text>
+
+<g>
+<rect x="60" y="252" width="300" height="150" rx="12" fill="#FFFFFF" stroke="#BFD8CC" stroke-width="1.5"/>
+<text x="76" y="276" font-size="12" font-weight="700" fill="#22604A">VERIFY 2.0 — the anti-fake gate</text>
+<text x="180" y="398" text-anchor="middle" font-size="10" fill="#7A9C8B">same object · real scene · scene continuity · AI tells</text>
+<rect x="76" y="304" width="120" height="80" rx="10" fill="#F0F7F3" stroke="#9CC3AF"/>
+<text x="136" y="336" text-anchor="middle" font-size="12" font-weight="700" fill="#22604A">Examine</text>
+<text x="136" y="352" text-anchor="middle" font-size="10" fill="#7A9C8B">2–4 frames</text>
+<text x="136" y="368" text-anchor="middle" font-size="9.5" fill="#9DB8AA">qwen3.7-plus VL</text>
+<rect x="216" y="304" width="128" height="80" rx="10" fill="#F8EFD8" stroke="#DEC389"/>
+<text x="280" y="330" text-anchor="middle" font-size="11.5" font-weight="700" fill="#8A6C17">unsure?</text>
+<text x="280" y="347" text-anchor="middle" font-size="10" fill="#A98F45">asks for a SPECIFIC</text>
+<text x="280" y="361" text-anchor="middle" font-size="10" fill="#A98F45">extra angle, round 2</text>
+<text x="280" y="377" text-anchor="middle" font-size="9.5" fill="#BCA868">self-correction loop</text>
+<path d="M280 306 C 280 290, 180 290, 156 304" fill="none" stroke="#C08A1E" stroke-width="1.6" marker-end="url(#aa)"/>
+</g>
+
+<line x1="360" y1="327" x2="384" y2="327" stroke="#2E7D5B" stroke-width="1.8" marker-end="url(#ag)"/>
+
+
+<g>
+<rect x="384" y="252" width="200" height="150" rx="12" fill="#FFFFFF" stroke="#BFD8CC" stroke-width="1.5"/>
+<text x="400" y="276" font-size="12" font-weight="700" fill="#22604A">PRICE</text>
+<text x="400" y="294" font-size="10.5" fill="#7A9C8B">live comps via forced</text>
+<text x="400" y="308" font-size="10.5" fill="#7A9C8B">web search → number,</text>
+<text x="400" y="322" font-size="10.5" fill="#7A9C8B">floor + the reasoning</text>
+<text x="400" y="345" font-size="9.5" fill="#9DB8AA">qwen3.7-plus + enable_search</text>
+<rect x="400" y="358" width="168" height="30" rx="8" fill="#F0F7F3" stroke="#9CC3AF" stroke-dasharray="4 3"/>
+<text x="484" y="377" text-anchor="middle" font-size="10.5" font-weight="700" fill="#22604A">🧑 human confirms the number</text>
+</g>
+
+<line x1="584" y1="327" x2="608" y2="327" stroke="#2E7D5B" stroke-width="1.8" marker-end="url(#ag)"/>
+
+<g>
+<rect x="608" y="252" width="128" height="150" rx="12" fill="#FFFFFF" stroke="#BFD8CC" stroke-width="1.5"/>
+<text x="624" y="276" font-size="12" font-weight="700" fill="#22604A">LIST</text>
+<text x="624" y="294" font-size="10.5" fill="#7A9C8B">status →</text>
+<text x="624" y="308" font-size="10.5" fill="#7A9C8B">selling on</text>
+<text x="624" y="322" font-size="10.5" fill="#7A9C8B">the board</text>
+<text x="624" y="345" font-size="9.5" fill="#9DB8AA">local JSON or</text>
+<text x="624" y="359" font-size="9.5" fill="#9DB8AA">live onlist.ai</text>
+</g>
+
+<line x1="736" y1="327" x2="760" y2="327" stroke="#2E7D5B" stroke-width="1.8" marker-end="url(#ag)"/>
+
+<g>
+<rect x="760" y="252" width="260" height="150" rx="12" fill="#FFFFFF" stroke="#BFD8CC" stroke-width="1.5"/>
+<text x="776" y="276" font-size="12" font-weight="700" fill="#22604A">TRIAGE — delegated negotiation</text>
+<text x="776" y="294" font-size="10.5" fill="#7A9C8B">ranks claims, flags scam patterns,</text>
+<text x="776" y="308" font-size="10.5" fill="#7A9C8B">drafts replies; lowballs get a counter</text>
+<text x="776" y="322" font-size="10.5" fill="#7A9C8B">bounded by the floor — enforced in</text>
+<text x="776" y="336" font-size="10.5" font-weight="700" fill="#22604A">CODE, never below, never revealed</text>
+<rect x="776" y="358" width="228" height="30" rx="8" fill="#F0F7F3" stroke="#9CC3AF" stroke-dasharray="4 3"/>
+<text x="890" y="377" text-anchor="middle" font-size="10.5" font-weight="700" fill="#22604A">🧑 human taps accept / decline</text>
+</g>
+
+<rect x="60" y="418" width="588" height="104" rx="12" fill="#FFFFFF" stroke="#BFD8CC" stroke-width="1.5"/>
+<text x="76" y="442" font-size="12" font-weight="700" fill="#22604A">Verify 2.0 benchmark — receipts in the repo</text>
+<text x="76" y="462" font-size="11" fill="#6B7280">labeled cases incl. AI-GENERATED listings made with qwen-image (the examiner catches</text>
+<text x="76" y="477" font-size="11" fill="#6B7280">fakes from its own model family) · bench-driven prompt iteration caught what slipped</text>
+<text x="76" y="504" font-size="12.5" font-weight="800" fill="#2E7D5B">fakes caught 6/6 · false blocks 0 · median 7.4s · $0.022 per suite</text>
+
+<rect x="668" y="418" width="352" height="104" rx="12" fill="#FFFFFF" stroke="#DEC389" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="684" y="442" font-size="12" font-weight="700" fill="#8A6C17">Housekeeper on a schedule</text>
+<text x="684" y="462" font-size="11" fill="#6B7280">GET /digest — FC Timer (or any cron) wakes the</text>
+<text x="684" y="477" font-size="11" fill="#6B7280">agent weekly: stale listings, price cuts, unanswered</text>
+<text x="684" y="492" font-size="11" fill="#6B7280">buyers → one actionable push. Acts unprompted;</text>
+<text x="684" y="507" font-size="11" fill="#6B7280">the human still owns every action.</text>
+
+<line x1="300" y1="542" x2="300" y2="586" stroke="#2E7D5B" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="312" y="570" font-size="11.5" fill="#6B7280">model calls · dashscope-intl API</text>
+<line x1="880" y1="542" x2="880" y2="586" stroke="#C08A1E" stroke-width="1.8" marker-end="url(#aa)"/>
+<text x="868" y="570" font-size="11.5" fill="#6B7280" text-anchor="end">frames + verdicts</text>
+
+<rect x="40" y="590" width="700" height="148" rx="14" fill="#F0F7F3" stroke="#2E7D5B" stroke-width="1.8"/>
+<text x="60" y="618" font-size="13.5" font-weight="800" fill="#22604A">ALIBABA MODEL STUDIO / DASHSCOPE — Singapore</text>
+<text x="60" y="636" font-size="11.5" fill="#5F8A76">OpenAI-compatible endpoint · response_format json_object · thinking off where speed wins</text>
+<g font-size="11.5" font-weight="700">
+<rect x="60" y="652" width="150" height="66" rx="9" fill="#FFFFFF" stroke="#9CC3AF"/>
+<text x="135" y="680" text-anchor="middle" fill="#22604A">qwen3.7-plus VL</text>
+<text x="135" y="698" text-anchor="middle" font-size="10" font-weight="500" fill="#7A9C8B">authenticity examiner</text>
+<rect x="218" y="652" width="160" height="66" rx="9" fill="#FFFFFF" stroke="#9CC3AF"/>
+<text x="298" y="680" text-anchor="middle" fill="#22604A">qwen3.7-plus + search</text>
+<text x="298" y="698" text-anchor="middle" font-size="10" font-weight="500" fill="#7A9C8B">pricing + triage</text>
+<rect x="386" y="652" width="130" height="66" rx="9" fill="#FFFFFF" stroke="#9CC3AF"/>
+<text x="451" y="680" text-anchor="middle" fill="#22604A">qwen3.6-flash</text>
+<text x="451" y="698" text-anchor="middle" font-size="10" font-weight="500" fill="#7A9C8B">angle requests</text>
+<rect x="524" y="652" width="130" height="66" rx="9" fill="#FFFFFF" stroke="#9CC3AF"/>
+<text x="589" y="680" text-anchor="middle" fill="#22604A">qwen3.7-max</text>
+<text x="589" y="698" text-anchor="middle" font-size="10" font-weight="500" fill="#7A9C8B">weekly digest</text>
+</g>
+
+<rect x="760" y="590" width="280" height="148" rx="14" fill="#FBF6E8" stroke="#C08A1E" stroke-width="1.8" stroke-dasharray="6 4"/>
+<text x="780" y="618" font-size="13.5" font-weight="800" fill="#8A6C17">ALIBABA OSS — evidence locker</text>
+<text x="780" y="642" font-size="11.5" fill="#95814E">every verification → immutable record:</text>
+<text x="780" y="660" font-size="11.5" fill="#95814E">exact frames + verdict JSON, timestamped</text>
+<text x="780" y="678" font-size="11.5" fill="#95814E">(what disputes get settled with)</text>
+<text x="780" y="702" font-size="10.5" fill="#B0A06E">zero-dep HMAC-SHA1 client · env-gated</text>
+<text x="780" y="718" font-size="10.5" fill="#B0A06E">4 env vars to enable · off = demo unchanged</text>
+
+<rect x="40" y="754" width="1000" height="30" rx="9" fill="#F0F7F3" stroke="#9CC3AF"/>
+<text x="540" y="774" text-anchor="middle" font-size="12" font-weight="600" fill="#22604A">The agent does the legwork and acts on its own doubt; a human owns every dollar — the price, the buyer, the sale.</text>
+</svg>

@@ -4,9 +4,24 @@
 Humans confirm every money decision. Powered by Qwen on Alibaba Cloud.
 
 The 2026 problem this attacks: marketplaces are drowning in AI-generated fake
-listings — photos of screens, re-shot catalog images, items the seller never
-held. This agent refuses to list anything it can't verify as a **physical
-object in the seller's hands**, then does the boring parts of selling it.
+listings — photos of screens, re-shot catalog images, items that never existed.
+This agent refuses to list anything it can't verify as a **physical object in
+the seller's hands**, then does the boring parts of selling it.
+
+## Try it in 60 seconds (no setup)
+
+**Live on Alibaba Function Compute: https://agent.onlist.ai**
+
+1. Open it **on your phone** (on desktop you'll get a QR code — scan it).
+2. Photograph any object near you, two angles. The agent verifies it's real,
+   names it, grades the condition, prices it with live market comps, then
+   screens demo buyers — flagging the scam and countering the lowball.
+3. Now try to fool it: open a product photo on your monitor and photograph
+   **the screen**. Blocked, with the reasoning.
+4. If the agent isn't sure, it doesn't guess — it tells you exactly which
+   extra angle to shoot and re-examines.
+
+![onlist-agent architecture](docs/architecture.png)
 
 ## The loop
 
@@ -14,26 +29,50 @@ object in the seller's hands**, then does the boring parts of selling it.
 frames from a live capture pass
         │
         ▼
-┌─ VERIFY 2.0 ─────────────┐   Qwen3.7-VL examines 2–4 frames:
-│ same physical object?    │   same object across viewpoints, real scene
-│ real scene, not a screen?│   (not a screen/print re-shot), condition
-│ condition + defects      │   and visible defects. Fails → listing BLOCKED.
-└──────────┬───────────────┘
+┌─ VERIFY 2.0 ─────────────┐   Qwen3.7-VL examines 2–4 frames: same object,
+│ same object? real scene? │   real scene (not a screen/print/AI render),
+│ scene continuity? AI?    │   scene continuity between frames, condition.
+│         unsure? ─────────┼─► asks for a SPECIFIC extra angle → round 2.
+└──────────┬───────────────┘   Confident fake → listing BLOCKED.
            ▼
-┌─ PRICE ──────────────────┐   Qwen3.7-Max + live web search finds comps,
+┌─ PRICE ──────────────────┐   Qwen + forced web search finds live comps,
 │ comps → number + floor   │   proposes a price WITH the reasoning.
 └──────────┬───────────────┘   Human confirms the number.
            ▼
 ┌─ LIST ───────────────────┐   Status flips to selling on the board.
 └──────────┬───────────────┘
            ▼
-┌─ TRIAGE ─────────────────┐   Claims ranked (scam patterns flagged),
-│ rank claims, draft replies│  replies drafted. Human taps accept/decline.
-└──────────────────────────┘
+┌─ TRIAGE ─────────────────┐   Claims ranked, scam patterns flagged, replies
+│ rank · flag · counter    │   drafted. Lowballs get a counter-offer bounded
+└──────────────────────────┘   by the floor — enforced in code, never below,
+                               never revealed. Human taps accept/decline.
 ```
 
 Every model call is metered into a **cost ledger** (`runs/ledger.json`) —
 tokens and dollars per stage, printed after each run.
+
+## Verify 2.0 benchmark — the receipts
+
+The anti-fake claim is measured, not asserted. `bench/` holds a labeled case
+suite — including **AI-generated listings produced with qwen-image**, so the
+examiner is tested against fakes from its own model family — and a harness
+that rewrites this table:
+
+| kind | cases | correct |
+|---|---|---|
+| ai (qwen-image renders) | 4 | 4/4 |
+| catalog re-shot | 1 | 1/1 |
+| object mismatch | 1 | 1/1 |
+
+**Fakes caught: 6/6 · Median verdict: 7.4s · $0.022 per suite**
+*(honest-capture cases — the false-block half of the story — land with the
+photo session in `bench/SHOTLIST.md`; the harness already reports both)*
+
+It didn't start at 6/6: two AI renders initially *passed* at 0.95 confidence.
+Bench-driven prompt iteration (synthetic tells, then a scene-continuity rule —
+*the viewpoint may change, the world may not*) closed the gap. The suite,
+the generator (`bench/make-ai-cases.py`), and per-case verdicts are all in the
+repo: `bun run bench` reproduces it with your key.
 
 ## Quickstart (≈3 minutes)
 
@@ -46,22 +85,47 @@ cp .env.example .env         # paste your DASHSCOPE_API_KEY
 bun run smoke                # one cheap call — verifies the key
 bun run demo                 # full autopilot pass; stops at the price checkpoint [y / your price / n]
 bun run demo --yes           # non-interactive (CI): auto-accepts the proposal
-bun run demo macbook-pro-14 seed/frames/1.jpg seed/frames/2.jpg   # anti-fake gate on your own frames
+bun run bench                # rerun the Verify 2.0 benchmark
 ```
 
 **With plain Node** (18+, no Bun — same code, compiled):
 
 ```bash
-npm install
-npm run build                # tsc → dist/*.js
-export DASHSCOPE_API_KEY=sk-...
-node dist/cli.js smoke
-node dist/server.js          # HTTP service on :8080
+npm install && npm run build
+node --env-file=.env dist/cli.js smoke
+node --env-file=.env dist/server.js       # HTTP service on :8080
 ```
 
 `bun run serve` / `node dist/server.js` starts the HTTP flavor
-(`/verify`, `/price`, `/triage`, a phone-first demo page) — that's what runs on
-Alibaba **Function Compute** in the deployment proof. See [deploy/alibaba.md](deploy/alibaba.md).
+(`/verify`, `/price`, `/triage`, `/digest`, the phone-first demo page) — that's
+what runs on Alibaba **Function Compute** behind https://agent.onlist.ai.
+See [deploy/alibaba.md](deploy/alibaba.md).
+
+## Runs on Alibaba Cloud
+
+- [`src/qwen.ts`](src/qwen.ts) — DashScope intl endpoint (OpenAI-compatible),
+  all Qwen model calls, `enable_search` + `forced_search`, cost metering
+- [`src/verify.ts`](src/verify.ts) / [`src/price.ts`](src/price.ts) /
+  [`src/triage.ts`](src/triage.ts) — the agent stages on Qwen models
+- **Function Compute** hosts the service (Singapore, Node.js web function);
+  **OSS** stores the optional evidence locker (below); **Model Studio** runs
+  every unit of intelligence
+
+## Evidence locker (OSS, optional)
+
+Every verification can write an immutable audit record — the exact frames the
+seller submitted plus the full verdict, timestamped — to Alibaba OSS
+(`evidence/<id>/`). That's what disputes get settled with. Zero-dependency
+OSS client (HMAC-SHA1, node:crypto), enabled by 4 env vars, silently off
+without them: see [deploy/alibaba.md](deploy/alibaba.md).
+
+## The housekeeper — an agent on a schedule
+
+`GET /digest` runs a weekly pass over the board: unverified listings (trust
+decays), items sitting unsold (price cut?), unanswered claims (buyers walk) →
+one short actionable push. Point an FC Timer trigger (or any cron) at it and
+the agent works while you don't. Recommendations only — the human owns every
+action.
 
 ## Live mode — the first production consumer
 
@@ -79,30 +143,33 @@ The commercial product stays closed; this agent uses only its public surface.
 ## Layout
 
 ```
-src/qwen.ts        DashScope client (OpenAI-compatible), cost metering
-src/verify.ts      Verify 2.0 — the anti-fake gate (Qwen3.7-VL)
-src/price.ts       price agent (Qwen3.7-Max + enable_search)
-src/triage.ts      buyer-claim ranking + reply drafts
+src/qwen.ts        DashScope client (OpenAI-compatible), cost metering, json mode
+src/verify.ts      Verify 2.0 — anti-fake gate + agentic decide() policy (unit-tested)
+src/price.ts       price agent (live web search, floor for negotiations)
+src/triage.ts      buyer triage + code-bounded counter-offers
+src/evidence.ts    OSS evidence locker (zero-dep signing, env-gated)
+src/digest.ts      weekly housekeeper
 src/agent.ts       the autopilot orchestration
 src/board/local.ts self-contained demo board (JSON file)
 src/board/onlist.ts live adapter to onlist.ai
-src/cli.ts         smoke | demo
-src/server.ts      HTTP service for the Alibaba Cloud deployment
+src/cli.ts         smoke | demo | digest
+src/server.ts      HTTP service + phone demo page (runs on FC)
+bench/             labeled benchmark: cases, harness, AI-fake generator, RESULTS.md
 ```
 
 ## How we address the judging criteria
 
-*(filled in with measured numbers before submission)*
-
-- **Technical depth** — multi-frame VL authenticity examination; provider-grade
-  client with tolerant JSON extraction; cost ledger; same agent against a file
-  store and a production API.
+- **Technical depth** — a measured anti-fake system (6/6 fakes incl.
+  AI-generated, receipts in-repo) with a self-correction loop
+  (the examiner acts on its own uncertainty), delegated negotiation bounded in
+  code, an immutable OSS audit trail, and a per-stage cost ledger.
 - **Innovation** — every "photo→listing" tool trusts the photo. This one
   interrogates it. Proof-of-physical-reality as the gate to commerce.
 - **Problem value** — AI-fake listings are the top trust problem of 2026
   marketplaces; verified-only listings attack it at the root.
-- **Presentation** — 3-minute video: watch the agent catch a screen re-shot,
-  then sell a real laptop end-to-end.
+- **Presentation** — try the live agent at https://agent.onlist.ai; the
+  3-minute video shows it catching a screen re-shot, asking for a better
+  angle, and selling a real item end-to-end.
 
 ## License
 

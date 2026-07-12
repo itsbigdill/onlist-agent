@@ -3,6 +3,7 @@
 // is implemented by board/onlist.ts against the live product.
 
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import type { Claim } from "../triage.js";
 
 export interface BoardItem {
@@ -23,13 +24,21 @@ export interface Board {
   label: string;
 }
 
-const STORE = "runs/board.json";
+// Where the mutable board lives. On Function Compute the code dir is
+// read-only (FC_FUNC_CODE_PATH is set there) — write to /tmp instead.
+const RUNS = process.env.RUNS_DIR ?? (process.env.FC_FUNC_CODE_PATH ? "/tmp/runs" : "runs");
+const STORE = `${RUNS}/board.json`;
+// The seed ships with the package — resolve it from the package root, not the
+// cwd, so the server finds it no matter where it was launched from.
+const SEED = fileURLToPath(new URL("../../seed/items.json", import.meta.url));
 
 export function localBoard(): Board {
   const load = (): BoardItem[] => {
     if (!existsSync(STORE)) {
-      const seed = JSON.parse(readFileSync("seed/items.json", "utf8")) as BoardItem[];
-      mkdirSync("runs", { recursive: true });
+      const seed = existsSync(SEED)
+        ? (JSON.parse(readFileSync(SEED, "utf8")) as BoardItem[])
+        : [];                                  // no seed → start empty, don't crash
+      mkdirSync(RUNS, { recursive: true });
       writeFileSync(STORE, JSON.stringify(seed, null, 2));
     }
     return JSON.parse(readFileSync(STORE, "utf8")) as BoardItem[];
@@ -37,7 +46,7 @@ export function localBoard(): Board {
   const save = (items: BoardItem[]) => writeFileSync(STORE, JSON.stringify(items, null, 2));
 
   return {
-    label: "local demo board (runs/board.json)",
+    label: `local demo board (${STORE})`,
     async list() {
       return load();
     },

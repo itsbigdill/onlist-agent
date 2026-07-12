@@ -33,7 +33,7 @@ class Ledger {
     console.log(`  total ${" ".repeat(37)}$${this.totalUSD.toFixed(4)}`);
   }
 
-  save(dir = "runs") {
+  save(dir = process.env.RUNS_DIR ?? (process.env.FC_FUNC_CODE_PATH ? "/tmp/runs" : "runs")) {
     mkdirSync(dir, { recursive: true });
     writeFileSync(`${dir}/ledger.json`, JSON.stringify({ rows: this.rows, totalUSD: this.totalUSD }, null, 2));
   }

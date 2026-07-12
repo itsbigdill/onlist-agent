@@ -13,7 +13,7 @@ import { networkInterfaces } from "node:os";
 import { MODELS } from "./qwen.js";
 import { priceItem } from "./price.js";
 import { triageClaims } from "./triage.js";
-import { verifyParts, type Verdict } from "./verify.js";
+import { verifyAgentic, type Prior, type Verdict } from "./verify.js";
 
 // FC_SERVER_PORT is set by Alibaba Function Compute custom runtimes; PORT for
 // generic hosts; 8080 for local. Listens on 0.0.0.0 so it works in a container.
@@ -70,6 +70,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #verdict { font-size: 26px; font-weight: 800; }
   #res.ok #verdict { color: #2E7D5B; }
   #res.no #verdict { color: #DD7A51; }
+  #res.mid #verdict { color: #B98A1C; }
   /* editable item name — corrects a mis-ID without a heavy form */
   .nameedit { border: 0; background: transparent; text-align: center; width: 100%;
               font: 600 18px -apple-system, system-ui; color: rgba(31,41,55,.85); margin-top: 8px; }
@@ -79,6 +80,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .chips span { border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; }
   .c-green { background: #E4F1E9; color: #2E7D5B; }
   .c-coral { background: #FBE7DF; color: #B45838; }
+  .c-amber { background: #F8EFD8; color: #91711B; }
   .why { margin-top: 18px; }
   .why summary { list-style: none; cursor: pointer; font-size: 13px; font-weight: 700;
                  color: rgba(31,41,55,.5); display: inline-flex; align-items: center; gap: 5px; }
@@ -160,6 +162,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
     <div id="condline" class="condline"></div>
     <div id="chips" class="chips"></div>
     <details class="why" id="whyRes"><summary><span class="chev">›</span> Why?</summary><p id="why"></p></details>
+    <button id="more" class="cta" hidden>Add that shot 📷</button>
     <button id="sell" class="cta" hidden>Sell it for me →</button>
     <button id="again" class="ghostbtn">Try another</button>
   </div>
@@ -211,6 +214,7 @@ function shrink(file) {
 
 var verdict = null;
 var lastPrice = null;
+var pending = null;   // agent asked for one more angle: { reasoning, request }
 
 // Two-slot shoot UI: filled thumbnails + a dashed placeholder for what's still needed.
 function renderShoot() {
@@ -248,7 +252,7 @@ $("cap").onchange = function () {
   shrink(f).then(function (d) {
     if (!d) return;
     frames.push(d); renderShoot();
-    if (frames.length >= 2) verify();
+    if (pending ? frames.length >= 3 : frames.length >= 2) verify();
   });
 };
 
@@ -256,11 +260,26 @@ function verify() {
   panel("busy", "Checking if it's real…");
   fetch("/verify", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: "item", frames: frames }),
+    body: JSON.stringify({ title: "item", frames: frames, round: pending ? 2 : 1, prior: pending }),
   }).then(function (r) { return r.json(); }).then(function (v) {
     if (v.error) throw new Error(v.error);
     verdict = v;
-    var ok = v.samePhysicalObject && v.isRealScene && v.matchesTitle && v.confidence >= 0.6;
+    if (v.decision === "need_more") {
+      // the agent is unsure and says exactly what shot would settle it
+      pending = { reasoning: v.reasoning || "", request: v.request || "" };
+      $("res").className = "panel mid";
+      $("verdict").textContent = "One more angle";
+      $("nameEdit").style.display = "none"; $("condline").textContent = "";
+      $("chips").innerHTML = chip("Agent wants proof", "c-amber");
+      $("why").textContent = v.request || "Take one more photo from a different angle.";
+      $("whyRes").open = true;
+      $("sell").hidden = true; $("more").hidden = false;
+      panel("res");
+      return;
+    }
+    pending = null; $("more").hidden = true;
+    var ok = v.decision ? v.decision === "verified"
+           : (v.samePhysicalObject && v.isRealScene && v.matchesTitle && v.confidence >= 0.6);
     $("res").className = "panel " + (ok ? "ok" : "no");
     $("verdict").textContent = ok ? "Real ✓" : "Not real ✕";
     // item name is editable — tap to fix a mis-ID before pricing
@@ -367,9 +386,11 @@ $("list").onclick = function () {
 };
 
 function reset() {
-  frames = []; verdict = null; lastPrice = null; renderShoot();
+  frames = []; verdict = null; lastPrice = null; pending = null;
+  $("more").hidden = true; renderShoot();
   panel("shoot");
 }
+$("more").onclick = function () { $("cap").click(); };
 $("again").onclick = reset;
 $("again2").onclick = reset;
 $("again3").onclick = reset;
@@ -389,8 +410,8 @@ if (isDesktop) {
 </script>`;
 
 // Verify over data-URLs (the CLI path reads files; HTTP takes them inline).
-const verifyDataURLs = (title: string, frames: string[]) =>
-  verifyParts(title, frames.slice(0, 4).map((url) => ({ type: "image_url" as const, image_url: { url } })));
+const verifyDataURLs = (title: string, frames: string[], round: number, prior?: Prior) =>
+  verifyAgentic(title, frames.slice(0, 4).map((url) => ({ type: "image_url" as const, image_url: { url } })), round, prior);
 
 const MAX_BODY = 15 * 1024 * 1024; // 4 downscaled frames fit comfortably
 
@@ -435,7 +456,13 @@ createServer(async (req, res) => {
     }
     if (req.method === "POST" && req.url === "/verify") {
       const b = await readBody(req);
-      const verdict = await verifyDataURLs(String(b.title ?? ""), Array.isArray(b.frames) ? b.frames.map(String) : []);
+      const round = Number(b.round) === 2 ? 2 : 1;
+      const pr = b.prior as { reasoning?: unknown; request?: unknown } | undefined;
+      const prior = round === 2 && pr
+        ? { reasoning: String(pr.reasoning ?? ""), request: String(pr.request ?? "") }
+        : undefined;
+      const verdict = await verifyDataURLs(
+        String(b.title ?? ""), Array.isArray(b.frames) ? b.frames.map(String) : [], round, prior);
       return json(res, verdict ? 200 : 422, verdict ?? { error: "no verdict" });
     }
     if (req.method === "POST" && req.url === "/price") {

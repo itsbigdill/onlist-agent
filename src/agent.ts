@@ -3,12 +3,12 @@
 
 import { priceItem, type PriceCall } from "./price.js";
 import { triageClaims } from "./triage.js";
-import { verifyFrames, verified, type Verdict } from "./verify.js";
+import { verifyFrames, verified, type AgenticVerdict } from "./verify.js";
 import type { Board, BoardItem } from "./board/local.js";
 
 export interface AutopilotReport {
   item: BoardItem;
-  verdict: Verdict | null;
+  verdict: AgenticVerdict | null;
   verified: boolean;
   price: Awaited<ReturnType<typeof priceItem>>;
   listedAtUSD: number | null;
@@ -34,10 +34,15 @@ export async function autopilot(
   if (!item) throw new Error(`no item ${itemId} on ${board.label}`);
   const actions: string[] = [];
 
-  // 1. Prove it's real (Verify 2.0) — the anti-fake gate.
-  let verdict: Verdict | null = null;
+  // 1. Prove it's real (Verify 2.0) — the anti-fake gate. The agent may come
+  //    back asking for a specific extra angle instead of guessing.
+  let verdict: AgenticVerdict | null = null;
   if (framePaths.length) {
     verdict = await verifyFrames(item.title, framePaths);
+    if (verdict?.decision === "need_more") {
+      actions.push(`agent needs more evidence — asked the seller: "${verdict.request}" (rerun with the extra frame)`);
+      return { item, verdict, verified: false, price: null, listedAtUSD: null, triage: null, actions };
+    }
     if (verified(verdict)) {
       await board.update(item.id, {
         verifiedAt: new Date().toISOString(),

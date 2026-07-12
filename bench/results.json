@@ -1,5 +1,49 @@
 [
   {
+    "id": "ai-airpods",
+    "title": "AirPods Pro",
+    "expect": "refuse",
+    "kind": "ai",
+    "got": "refuse",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 17835,
+    "reasoning": "The images exhibit strong indicators of AI generation rather than a real camera capture. Key tells include: 1) The steam rising from the coffee mug in Frame 1 has an unnatural, smudged texture and lacks coherent fluid dynamics; 2) The background bookshelf in Frame 2 features books with melted, illegible spines and impossible geometry, a common artifact of generative models struggling with text and linear perspective; 3) The lighting is overly perfect and 'studio-like' with soft, uniform shadows that lack the subtle noise and imperfections of a real handheld photo; 4) The wood grain on the tabl"
+  },
+  {
+    "id": "ai-macbook",
+    "title": "MacBook Pro 14",
+    "expect": "refuse",
+    "kind": "ai",
+    "got": "refuse",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 8638,
+    "reasoning": "The frames depict a real physical scene (natural lighting, consistent wood grain texture, realistic depth of field), but they do not show the same physical object in the same moment. In Frame 1, the laptop screen is off/black and the table to the left of the laptop is relatively clear. In Frame 2, the laptop screen is on (displaying a wallpaper) and the table behind/left is now cluttered with papers, books, and mugs that were absent in Frame 1. These are two separate setups or times, not a continuous camera move around a single static state."
+  },
+  {
+    "id": "ai-sneakers",
+    "title": "Nike Air Jordan 1",
+    "expect": "refuse",
+    "kind": "ai",
+    "got": "refuse",
+    "ok": true,
+    "conf": 1,
+    "ms": 6301,
+    "reasoning": "The frames show two completely different colorways of the Nike Air Jordan 1. Frame 1 displays the 'Chicago' colorway (red overlays), while Frame 2 displays the 'Black Toe' or similar colorway (black overlays). Although the room setting (floor, magazines, chair) appears consistent, the primary subject has changed between shots, meaning they are not the same physical object."
+  },
+  {
+    "id": "ai-watch",
+    "title": "Seiko dive watch",
+    "expect": "refuse",
+    "kind": "ai",
+    "got": "refuse",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 7353,
+    "reasoning": "The frames show two different physical watches. Frame 1 features a Seiko with a blue rubber/silicone strap on a light wood surface next to a glass of water. Frame 2 features a Seiko with a stainless steel bracelet on a darker wood surface next to a lamp. While both are real Seiko dive watches (likely SRPE series 'Save the Ocean' models) and match the generic title, they are distinct items with different straps and backgrounds, failing the single-object consistency check."
+  },
+  {
     "id": "catalog-iphone",
     "title": "Apple iPhone 14 Pro, Deep Purple",
     "expect": "refuse",
@@ -7,8 +51,8 @@
     "got": "refuse",
     "ok": true,
     "conf": 1,
-    "ms": 9883,
-    "reasoning": "The two frames are pixel-identical duplicates, showing zero camera movement, parallax, or lighting shifts, which contradicts the claim of a 'live capture pass.' The image is clearly the official Apple product render (stock marketing image) featuring the specific Deep Purple gradient wallpaper and perfect studio lighting, rather than a photograph of a physical unit in a real environment. While the visual content matches the title description perfectly, it fails the authenticity check for being a real-world photo."
+    "ms": 5741,
+    "reasoning": "The two frames are pixel-identical digital renders (official Apple marketing assets), not a live camera capture. There is zero parallax, no lighting change, no sensor noise, and no background environment. This is a composite image of the front and back, impossible to capture in a single physical shot without a mirror setup, and lacks any real-world context."
   },
   {
     "id": "mismatch-iphone-aeron",
@@ -18,7 +62,7 @@
     "got": "refuse",
     "ok": true,
     "conf": 1,
-    "ms": 7918,
-    "reasoning": "The input contains two distinct images. Frame 1 is a standard Apple promotional render showing the front and back of an iPhone 14 Pro Deep Purple simultaneously, which is physically impossible for a single camera angle and indicates a catalog image rather than a real scene. Frame 2 depicts an ergonomic office chair, which contradicts the listing title claiming an iPhone. Therefore, the frames do not show the same object, the scene is not real, and the content does not match the title."
+    "ms": 5257,
+    "reasoning": "The input contains two completely different objects: an Apple iPhone 14 Pro and a Herman Miller Aeron chair. This violates the 'samePhysicalObject' constraint as they are not the same item nor the same scene. Furthermore, both images are digital product renders or catalog shots (perfect white backgrounds, studio lighting, no environmental context), failing the 'isRealScene' check for a real-world camera capture. While the first image matches the title, the presence of the chair confirms this is not a valid single-item listing capture."
   }
 ]

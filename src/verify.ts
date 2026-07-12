@@ -23,10 +23,22 @@ const SYSTEM = `You are a physical-authenticity examiner for a second-hand marke
 You receive several frames captured seconds apart while the seller moved their camera
 around an object, plus the listing title. Judge strictly:
 - samePhysicalObject: do ALL frames show the same single physical item (consistent
-  wear marks, lighting changes with viewpoint, background parallax)?
-- isRealScene: is this a real object in a real space — NOT a photo of a screen,
-  a printed picture, or a catalog/press image re-shot? Moire, glare rectangles,
-  pixel grids, paper texture, missing parallax are giveaways.
+  wear marks, lighting changes with viewpoint, background parallax) — AND the same
+  SCENE seconds apart? The viewpoint may change; the world may not: the same
+  surrounding objects in the same places, the same surface, the same device state
+  (a screen that turns on, clutter that appears or vanishes, a table that changes
+  contents between frames means these are two separate generations or shoots, not
+  two angles of one moment — set false).
+- isRealScene: is this a real object in a real space captured by a real camera?
+  FALSE for: a photo of a screen, a printed picture, or a catalog/press image
+  re-shot (moire, glare rectangles, pixel grids, paper texture, missing
+  parallax) — AND for AI-GENERATED images that never touched a camera. AI
+  tells, check every frame pair hard: background objects that change identity,
+  count, or geometry between "angles" (a mug that moves or morphs), text/logos
+  that smear or misspell, impossibly clean surfaces and cables, shadows or
+  reflections inconsistent with a single light source, bokeh that hugs the
+  subject too perfectly. Two flawless "angles" with mutually inconsistent
+  backgrounds are a fabrication, not parallax.
 - matchesTitle: is the object plausibly what the title claims? (If the title is the
   generic word "item", set matchesTitle true and just identify the object yourself.)
 - itemName: name the object as a seller would title a listing — brand + product when

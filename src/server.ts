@@ -131,9 +131,6 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .topreply { text-align: left; font-size: 13px; color: rgba(31,41,55,.62); background: #fff;
               border-radius: 12px; padding: 11px 13px; margin-top: 12px; }
   .topreply b { color: rgba(31,41,55,.5); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
-  #accept { margin-top: 12px; width: 100%; border: 0; background: #2E7D5B; color: #fff;
-            border-radius: 14px; padding: 14px; font: 700 15px -apple-system, system-ui; cursor: pointer; }
-  #accept:disabled { opacity: 1; background: #E4F1E9; color: #2E7D5B; }
   #doneNote { font-size: 14px; color: rgba(31,41,55,.55); margin-top: 8px; }
   /* autopilot timeline: steps check off as the agent works */
   #auto h3 { font-size: 16px; margin: 0 0 14px; color: rgba(31,41,55,.8); }
@@ -148,8 +145,21 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .astep .amain { flex: 1; }
   .astep .at { font-weight: 700; font-size: 14.5px; }
   .astep .ad { font-size: 12px; color: rgba(31,41,55,.5); }
-  .adjust { border: 0; background: transparent; color: rgba(31,41,55,.45); cursor: pointer;
-            font: 600 12px -apple-system, system-ui; text-decoration: underline; padding: 2px 4px; }
+  /* the offer: the one human decision — authorize a sale range */
+  .range { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; margin: 6px 0 2px; }
+  .rangeSub { font-size: 13px; color: rgba(31,41,55,.5); }
+  /* the prize: a ready-to-print shipping label lands in your email */
+  .shiplabel { text-align: left; background: #fff; border: 2px dashed rgba(31,41,55,.25);
+               border-radius: 14px; padding: 14px 16px; margin-top: 14px;
+               font-family: ui-monospace, Menlo, monospace; }
+  .shiplabel .to { font-size: 11px; color: rgba(31,41,55,.45); text-transform: uppercase;
+                   letter-spacing: .06em; }
+  .shiplabel .addr { font-size: 13.5px; font-weight: 700; line-height: 1.5; margin-top: 3px; }
+  .barcode { height: 42px; margin-top: 12px; border-radius: 4px;
+             background: repeating-linear-gradient(90deg, #1F2937 0 2px, transparent 2px 5px,
+               #1F2937 5px 9px, transparent 9px 11px, #1F2937 11px 12px, transparent 12px 16px); }
+  .labelnote { font-size: 13px; color: rgba(31,41,55,.55); margin-top: 12px; }
+  .demonote { font-size: 11px; color: rgba(31,41,55,.35); margin-top: 10px; }
 
   .foot { display: block; text-align: center; font-size: 12px; color: rgba(31,41,55,.38);
           margin-top: 22px; }
@@ -184,26 +194,37 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
     <button id="again" class="ghostbtn">Try another</button>
   </div>
 
-  <div id="auto" class="panel">
-    <h3>Autopilot engaged</h3>
-    <div class="astep" id="as1"><span class="tick">✓</span><div class="amain"><div class="at">Verified real</div><div class="ad" id="as1d"></div></div></div>
-    <div class="astep" id="as2"><span class="tick">…</span><div class="amain"><div class="at">Pricing from live comps</div><div class="ad" id="as2d"></div></div></div>
-    <div class="astep" id="as3"><span class="tick">…</span><div class="amain"><div class="at">Listing</div><div class="ad" id="as3d"></div></div></div>
-    <div class="astep" id="as4"><span class="tick">…</span><div class="amain"><div class="at">Screening buyers</div><div class="ad" id="as4d"></div></div></div>
+  <div id="offer" class="panel">
+    <div id="offItem" style="font-size:15px;font-weight:600;color:rgba(31,41,55,.7)"></div>
+    <div id="offCond" class="condline"></div>
+    <div class="range" id="offRange"></div>
+    <div class="rangeSub">the agent will sell inside this range — never below</div>
+    <details class="why" id="whyOffer"><summary><span class="chev">›</span> How it sized the market</summary>
+      <div id="offComps" class="complist"></div><p id="offWhy"></p></details>
+    <button id="sellgo" class="cta">Sell it for me →</button>
+    <button id="again4" class="ghostbtn">Try another</button>
   </div>
 
-  <div id="manage" class="panel">
-    <div class="listing">
-      <div><div id="mItem"></div><span class="vbadge">✓ verified real</span></div>
-      <div style="text-align:right"><div class="lp" id="mPrice"></div>
-        <button id="adjust" class="adjust">adjust price</button></div>
-    </div>
-    <details class="why" id="whyPrice"><summary><span class="chev">›</span> How the agent priced it</summary>
-      <div id="comps" class="complist"></div><p id="priceWhy"></p></details>
-    <div class="sect">The agent screened your buyers</div>
+  <div id="auto" class="panel">
+    <h3>Autopilot engaged — hands off</h3>
+    <div class="astep" id="as1"><span class="tick">…</span><div class="amain"><div class="at">Listing</div><div class="ad" id="as1d"></div></div></div>
+    <div class="astep" id="as2"><span class="tick">…</span><div class="amain"><div class="at">Handling buyers</div><div class="ad" id="as2d"></div></div></div>
+    <div class="astep" id="as3"><span class="tick">…</span><div class="amain"><div class="at">Closing the sale</div><div class="ad" id="as3d"></div></div></div>
+  </div>
+
+  <div id="sold" class="panel">
+    <div id="soldTitle" style="font-size:24px;font-weight:800"></div>
+    <div id="soldSub" style="font-size:14px;color:rgba(31,41,55,.55);margin-top:4px"></div>
+    <div class="sect">What the agent did with your buyers</div>
     <div id="buyers"></div>
-    <div id="topreply" class="topreply" hidden></div>
-    <button id="accept" hidden>Accept top buyer</button>
+    <div class="shiplabel" id="label" hidden>
+      <div class="to">Prepaid shipping label · ship to</div>
+      <div class="addr" id="shipTo"></div>
+      <div class="barcode"></div>
+    </div>
+    <div class="labelnote" id="labelNote"></div>
+    <div class="demonote">demo board: the sale is simulated with the demo buyers — in production
+      the buyer pays through the marketplace and this label is generated by the carrier</div>
     <button id="again3" class="ghostbtn" style="margin-top:16px">Done</button>
   </div>
 </div>
@@ -256,7 +277,7 @@ function renderShoot() {
 function chip(text, cls) { return '<span class="' + cls + '">' + text + '</span>'; }
 function esc(s) { return String(s).replace(/[<>&]/g, function (c) { return { "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]; }); }
 function panel(id, label) {
-  ["shoot", "res", "auto", "manage"].forEach(function (p) { $(p).style.display = "none"; });
+  ["shoot", "res", "offer", "auto", "sold"].forEach(function (p) { $(p).style.display = "none"; });
   $("busy").style.display = id === "busy" ? "block" : "none";
   if (id === "busy") { $("busyLabel").textContent = label; return; }
   $(id).style.display = id === "shoot" ? "flex" : "block";
@@ -324,46 +345,76 @@ function verify() {
 }
 
 // ————— THE AUTOPILOT: verified → priced → listed → buyers screened, hands-free.
-// The human owns the money at the end (adjust price, accept a buyer) — but the
-// selling legwork flies on its own.
+// The human authorizes a sale RANGE once; the agent flies the rest —
+// list, negotiate inside the range, close. Next human touch: the shipping label.
 function step(id, state, detail) {
   var el = $(id);
   el.className = "astep " + state;
   el.querySelector(".tick").textContent = state === "working" ? "…" : "✓";
   if (detail != null) $(id + "d").textContent = detail;
 }
+// ————— Step 1 of the human's ONE decision: the offer. The agent sizes the
+// market and shows the sale RANGE it wants authority over. One tap delegates it.
 function runAutopilot(v) {
-  panel("auto");
-  step("as1", "on", (v.itemName || "item") + " · " + (v.condition || ""));
-  step("as2", "on working", "searching the live market…");
+  panel("busy", "Sizing the market…");
   fetch("/price", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title: v.itemName || "item", verdict: v }),
   }).then(function (r) { return r.json(); }).then(function (p) {
     if (p.error) throw new Error(p.error);
     lastPrice = p;
-    step("as2", "on", "$" + p.suggestedUSD + " · floor $" + p.floorUSD);
-    step("as3", "on working", "");
-    setTimeout(function () {
-      step("as3", "on", "live on the board at $" + p.suggestedUSD);
-      step("as4", "on working", "ranking claims, drafting replies…");
-      fetch("/triage", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: v.itemName || "item", priceUSD: p.suggestedUSD,
-                               floorUSD: p.floorUSD, claims: DEMO_BUYERS }),
-      }).then(function (r) { return r.json(); }).then(function (tg) {
-        var n = (tg && tg.ranked || []).length;
-        step("as4", "on", n + " buyers screened");
-        setTimeout(function () { showManage(v, p, tg); }, 700);
-      }).catch(function () { step("as4", "on", "screening failed — buyers arrive later");
-        setTimeout(function () { showManage(v, p, null); }, 700); });
-    }, 500);
+    $("offItem").textContent = v.itemName || "item";
+    $("offCond").textContent = "Condition: " + (v.condition || "—") + " · verified real";
+    $("offRange").textContent = "$" + p.floorUSD + "–" + p.suggestedUSD;
+    $("offComps").innerHTML = (p.comps || []).slice(0, 3).map(function (c) {
+      return '<div class="comprow"><span class="lbl">' + esc(c.label) + '</span><span class="amt">$' + c.priceUSD + '</span></div>';
+    }).join("");
+    $("offWhy").textContent = p.rationale || "";
+    $("whyOffer").open = false;
+    $("sellgo").onclick = function () { engage(v, p); };
+    panel("offer");
   }).catch(function (e) {
     $("res").className = "panel no"; $("verdict").textContent = "Couldn't price it";
     $("nameEdit").style.display = "none"; $("condline").textContent = "";
     $("chips").innerHTML = ""; $("why").textContent = String(e.message || e);
     panel("res");
   });
+}
+
+// ————— The delegated flight: list → handle buyers → close the sale — all
+// inside the authorized range. The human's next touch is sticking a label on a box.
+function engage(v, p) {
+  panel("auto");
+  step("as1", "on working", "");
+  setTimeout(function () {
+    step("as1", "on", "live on the board at $" + p.suggestedUSD);
+    step("as2", "on working", "ranking claims, drafting replies, countering…");
+    fetch("/triage", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: v.itemName || "item", priceUSD: p.suggestedUSD,
+                             floorUSD: p.floorUSD, claims: DEMO_BUYERS }),
+    }).then(function (r) { return r.json(); }).then(function (tg) {
+      var ranked = (tg && tg.ranked) || [];
+      var counters = ranked.filter(function (b) { return b.counterUSD; }).length;
+      step("as2", "on", ranked.length + " screened" + (counters ? " · " + counters + " countered in-range" : ""));
+      var top = ranked[0];
+      var sellable = top && top.score >= 70;
+      step("as3", "on working", "");
+      setTimeout(function () {
+        if (sellable) {
+          var who = (DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {}).name || "buyer";
+          step("as3", "on", "SOLD to " + who + " for $" + p.suggestedUSD);
+        } else {
+          step("as3", "on", "no clean buyer yet — negotiating inside your range");
+        }
+        setTimeout(function () { showSold(v, p, tg, sellable); }, 800);
+      }, 900);
+    }).catch(function () {
+      step("as2", "on", "screening hiccup — buyers arrive later");
+      step("as3", "on", "listed — the agent keeps working");
+      setTimeout(function () { showSold(v, p, null, false); }, 800);
+    });
+  }, 600);
 }
 
 function itemName() { return (verdict && verdict.itemName || "item").trim(); }
@@ -376,32 +427,14 @@ var DEMO_BUYERS = [
   { id: "b3", name: "Rita", message: "Would you take half?" }
 ];
 
-// The landing screen of the autopilot run: the live listing + screened buyers.
-// The human's two levers live here — adjust the price, accept a buyer.
-function showManage(v, p, tg) {
-  $("mItem").textContent = v.itemName || "item";
-  $("mPrice").textContent = "$" + p.suggestedUSD;
-  $("comps").innerHTML = (p.comps || []).slice(0, 3).map(function (c) {
-    return '<div class="comprow"><span class="lbl">' + esc(c.label) + '</span><span class="amt">$' + c.priceUSD + '</span></div>';
-  }).join("");
-  $("priceWhy").textContent = p.rationale || "";
-  $("whyPrice").open = false;
-  $("adjust").onclick = function () {
-    var now = prompt("Your price (the agent proposed $" + p.suggestedUSD + ", floor $" + p.floorUSD + ")",
-                     String(lastPrice ? lastPrice.suggestedUSD : p.suggestedUSD));
-    var n = Math.round(Number(now));
-    if (Number.isFinite(n) && n > 0) {
-      lastPrice = Object.assign({}, p, { suggestedUSD: n });
-      $("mPrice").textContent = "$" + n;
-    }
-  };
+// ————— The prize screen: sold, and the shipping label is already in your inbox.
+function showSold(v, p, tg, sellable) {
   var ranked = (tg && tg.ranked) || [];
-  // classify each buyer into good / lowball / scam from score + flags
   function verdictOf(b) {
     var scam = b.score <= 15 || (b.flags || []).some(function (f) { return /scam|overpay|shipping|check|fraud/i.test(f); });
-    if (scam) return { cls: "bad", ic: "✕", word: "Likely scam — skip" };
-    if (b.score >= 70) return { cls: "good", ic: "✓", word: "Solid — ready to meet" };
-    if (b.counterUSD) return { cls: "mid", ic: "~", word: "Lowball — agent counters at $" + b.counterUSD };
+    if (scam) return { cls: "bad", ic: "✕", word: "Likely scam — declined for you" };
+    if (b.score >= 70) return { cls: "good", ic: "✓", word: "Solid — deal closed" };
+    if (b.counterUSD) return { cls: "mid", ic: "~", word: "Lowball — countered at $" + b.counterUSD };
     return { cls: "mid", ic: "~", word: "Lowballing" };
   }
   $("buyers").innerHTML = ranked.map(function (b) {
@@ -411,30 +444,34 @@ function showManage(v, p, tg) {
       '<div class="bmain"><div class="bname">' + esc(who) + '</div>' +
       '<div class="bword">' + w.word + '</div></div><span class="bscore">' + b.score + '</span></div>';
   }).join("");
-  // only the top buyer gets a drafted reply + an accept button
-  var top = ranked[0];
-  if (top && top.score >= 70) {
+  if (sellable) {
+    var top = ranked[0];
     var who = (DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {}).name || "buyer";
-    $("topreply").innerHTML = "<b>Drafted reply to " + esc(who) + "</b><br>" + esc(top.draftReply || "");
-    $("topreply").hidden = false;
-    $("accept").hidden = false;
-    $("accept").disabled = false;
-    $("accept").textContent = "Accept " + who;
-    $("accept").onclick = function () { this.textContent = "✓ Accepted — meeting " + who; this.disabled = true; };
+    $("soldTitle").textContent = "Sold — $" + p.suggestedUSD;
+    $("soldSub").textContent = (v.itemName || "item") + " → " + who;
+    $("shipTo").innerHTML = esc(who) + " M.<br>2847 Juniper Lane<br>Orlando, FL 32803";
+    $("label").hidden = false;
+    $("labelNote").textContent = "📬 This prepaid label was just emailed to you. Stick it on a box — the courier does the rest.";
   } else {
-    $("topreply").hidden = true; $("accept").hidden = true;
+    $("soldTitle").textContent = "Live — $" + p.suggestedUSD;
+    $("soldSub").textContent = (v.itemName || "item") + " · the agent keeps negotiating inside your range";
+    $("label").hidden = true;
+    $("labelNote").textContent = "📬 The moment it sells, a prepaid shipping label lands in your email.";
   }
-  panel("manage");
+  panel("sold");
 }
 
 function reset() {
   frames = []; verdict = null; lastPrice = null; pending = null;
-  $("more").hidden = true; renderShoot();
+  $("more").hidden = true;
+  ["as1", "as2", "as3"].forEach(function (s) { step(s, "", ""); });
+  renderShoot();
   panel("shoot");
 }
 $("more").onclick = function () { $("cap").click(); };
 $("again").onclick = reset;
 $("again3").onclick = reset;
+$("again4").onclick = reset;
 
 // Default to the phone app; show the QR ONLY on a real desktop (hover + fine pointer).
 var LAN = ${JSON.stringify(LAN_URL)};

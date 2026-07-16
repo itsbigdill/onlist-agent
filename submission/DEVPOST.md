@@ -8,19 +8,20 @@ Paste-ready text for the Devpost form. Track: **Autopilot Agent**.
 onlist-agent
 
 ## Tagline (≤ 200 chars)
-Photograph a thing — and it's sold. The agent prices it from the live market,
-lists it, and handles the buyers on its own; you just adjust the price and tap
-accept. It also refuses to fly fakes.
+Photograph a thing — and it's sold. The agent quotes the range it'll sell for;
+one tap delegates listing, negotiation and closing. Your shipping label arrives
+by email. It also refuses to fly fakes.
 
 ## Elevator pitch (the "what")
-Point your phone at anything you want to sell — and watch the autopilot fly:
-it names the item, prices it from live market comps, **lists it**, screens the
-buyers, flags the scams, and counters the lowballs within a floor it proposed.
-You land on a live listing with a drafted reply to the best buyer. Your only
-two touches are money touches: adjust the price if you want, tap accept.
-Under the hood there's a gate that makes the autopilot trustworthy: it refuses
-to list anything it can't prove is a real physical object — no screenshots, no
-re-shot catalog photos, no AI renders. **Try it live: https://agent.onlist.ai**
+Point your phone at anything you want to sell. The agent proves it's real,
+sizes the live market, and makes you an offer: *"this sells for $520–650."*
+One tap — your only decision — delegates the rest: it lists the item, screens
+the buyers, declines the scams, counters the lowballs strictly inside your
+authorized range, and closes the deal. The prepaid shipping label lands in
+your email; your next touch is sticking it on a box. Under the hood there's a
+gate that makes the autopilot trustworthy: it refuses to list anything it
+can't prove is a real physical object — no screenshots, no re-shot catalog
+photos, no AI renders. **Try it live: https://agent.onlist.ai**
 
 ## Inspiration
 Everyone owns things they'd sell "if it weren't such a hassle" — the pricing
@@ -77,12 +78,13 @@ The evidence locker is a zero-dep OSS client (HMAC-SHA1 via node:crypto).
 The decision policy (`decide()`) is a pure function with 12 unit-tested
 boundary cases.
 
-## Human-in-the-loop, by design
-The agent never spends, promises, or sells — it flies the legwork and parks at
-the money. Three human levers are structural: the listed price is adjustable
-by the human at any moment, buyer accept/decline is a human tap, and
-counter-offers exist only inside the delegated floor — enforced in code, not
-in a prompt.
+## Delegation with bounds, by design
+The human makes exactly ONE money decision: authorizing the sale range the
+agent proposed. Everything the agent does after that tap is bounded by it —
+counter-offers can never go below the floor and never reveal it (enforced in
+code, not in a prompt), scam-flagged buyers get no counter at all, and the
+deal closes only inside the range. Trust the autopilot because its authority
+is written down.
 
 ## What's next
 Persist verified-listing evidence as a portable "proof of physical reality"

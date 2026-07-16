@@ -1,8 +1,9 @@
 # onlist-agent.
 
-**Photograph a thing — and it's sold. The agent names it, prices it from the
-live market, lists it, and handles the buyers. You touch money twice: adjust
-the price if you want, tap accept on a buyer.** Powered by Qwen on Alibaba Cloud.
+**Photograph a thing — and it's sold. The agent shows you the range it will
+sell for; one tap delegates the rest: it lists, negotiates inside your range,
+closes the deal — and the prepaid shipping label lands in your email.**
+Powered by Qwen on Alibaba Cloud.
 
 Selling second-hand dies in the boring middle: what is it worth, writing the
 listing, the inbox full of scammers and lowballs. onlist-agent is an autopilot
@@ -16,12 +17,12 @@ that gate below).
 **Live on Alibaba Function Compute: https://agent.onlist.ai**
 
 1. Open it **on your phone** (on desktop you'll get a QR code — scan it).
-2. Photograph any object near you, two angles — then just watch: the autopilot
-   verifies it's real, names it, prices it from live comps, **lists it**, and
-   screens the buyers — flagging the scam, countering the lowball within your
-   floor. You land on a live listing with a drafted reply to the best buyer.
-3. Your two levers: *adjust price* and *Accept*. Everything else already
-   happened.
+2. Photograph any object near you, two angles. The agent verifies it's real,
+   sizes the market, and makes you an offer: **"this sells for $X–Y"**.
+3. Tap *Sell it for me* — your one decision — and watch the autopilot fly:
+   listed, buyers screened (scam declined for you, lowball countered inside
+   your range), **sold** — and the prepaid shipping label is in your email.
+   Your next touch is sticking it on a box.
 4. If the agent isn't sure mid-flight it doesn't guess — it tells you exactly
    which extra angle to shoot and re-examines.
 5. Now try to fool it: photograph a product photo **on your monitor**.
@@ -41,17 +42,17 @@ frames from a live capture pass
 │         unsure? ─────────┼─► asks for a SPECIFIC extra angle → round 2.
 └──────────┬───────────────┘   Confident fake → listing BLOCKED.
            ▼
-┌─ PRICE ──────────────────┐   Qwen + forced web search finds live comps,
-│ comps → number + floor   │   proposes a price WITH the reasoning; the
-└──────────┬───────────────┘   human can adjust it on the live listing.
+┌─ OFFER ──────────────────┐   Qwen + forced web search finds live comps →
+│ "sells for $X–Y"         │   a sale RANGE. 🧑 One tap authorizes it —
+└──────────┬───────────────┘   the only human decision in the flow.
            ▼
 ┌─ LIST ───────────────────┐   Status flips to selling on the board.
 └──────────┬───────────────┘
            ▼
-┌─ TRIAGE ─────────────────┐   Claims ranked, scam patterns flagged, replies
-│ rank · flag · counter    │   drafted. Lowballs get a counter-offer bounded
-└──────────────────────────┘   by the floor — enforced in code, never below,
-                               never revealed. Human taps accept/decline.
+┌─ TRIAGE → CLOSE ─────────┐   Claims ranked, scams declined, lowballs
+│ rank · counter · close   │   countered — all inside the authorized range,
+└──────────────────────────┘   enforced in code. Deal closes; a prepaid
+                               shipping label is emailed to the seller.
 ```
 
 Every model call is metered into a **cost ledger** (`runs/ledger.json`) —

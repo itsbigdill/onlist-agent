@@ -1,25 +1,31 @@
 # onlist-agent.
 
-**Autopilot for selling real things: capture → prove-it's-real → price → list → handle buyers.**
-Humans confirm every money decision. Powered by Qwen on Alibaba Cloud.
+**Photograph a thing — and it's sold. The agent names it, prices it from the
+live market, lists it, and handles the buyers. You touch money twice: adjust
+the price if you want, tap accept on a buyer.** Powered by Qwen on Alibaba Cloud.
 
-The 2026 problem this attacks: marketplaces are drowning in AI-generated fake
-listings — photos of screens, re-shot catalog images, items that never existed.
-This agent refuses to list anything it can't verify as a **physical object in
-the seller's hands**, then does the boring parts of selling it.
+Selling second-hand dies in the boring middle: what is it worth, writing the
+listing, the inbox full of scammers and lowballs. onlist-agent is an autopilot
+for that whole middle — one capture in, a live listing with screened buyers
+out. And because an autopilot is only as good as what it lets through, it
+refuses to fly anything it can't prove is a **real physical object** (more on
+that gate below).
 
 ## Try it in 60 seconds (no setup)
 
 **Live on Alibaba Function Compute: https://agent.onlist.ai**
 
 1. Open it **on your phone** (on desktop you'll get a QR code — scan it).
-2. Photograph any object near you, two angles. The agent verifies it's real,
-   names it, grades the condition, prices it with live market comps, then
-   screens demo buyers — flagging the scam and countering the lowball.
-3. Now try to fool it: open a product photo on your monitor and photograph
-   **the screen**. Blocked, with the reasoning.
-4. If the agent isn't sure, it doesn't guess — it tells you exactly which
-   extra angle to shoot and re-examines.
+2. Photograph any object near you, two angles — then just watch: the autopilot
+   verifies it's real, names it, prices it from live comps, **lists it**, and
+   screens the buyers — flagging the scam, countering the lowball within your
+   floor. You land on a live listing with a drafted reply to the best buyer.
+3. Your two levers: *adjust price* and *Accept*. Everything else already
+   happened.
+4. If the agent isn't sure mid-flight it doesn't guess — it tells you exactly
+   which extra angle to shoot and re-examines.
+5. Now try to fool it: photograph a product photo **on your monitor**.
+   The autopilot refuses to fly a fake — blocked, with the reasoning.
 
 ![onlist-agent architecture](docs/architecture.png)
 
@@ -36,8 +42,8 @@ frames from a live capture pass
 └──────────┬───────────────┘   Confident fake → listing BLOCKED.
            ▼
 ┌─ PRICE ──────────────────┐   Qwen + forced web search finds live comps,
-│ comps → number + floor   │   proposes a price WITH the reasoning.
-└──────────┬───────────────┘   Human confirms the number.
+│ comps → number + floor   │   proposes a price WITH the reasoning; the
+└──────────┬───────────────┘   human can adjust it on the live listing.
            ▼
 ┌─ LIST ───────────────────┐   Status flips to selling on the board.
 └──────────┬───────────────┘

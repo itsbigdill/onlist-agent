@@ -135,6 +135,21 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
             border-radius: 14px; padding: 14px; font: 700 15px -apple-system, system-ui; cursor: pointer; }
   #accept:disabled { opacity: 1; background: #E4F1E9; color: #2E7D5B; }
   #doneNote { font-size: 14px; color: rgba(31,41,55,.55); margin-top: 8px; }
+  /* autopilot timeline: steps check off as the agent works */
+  #auto h3 { font-size: 16px; margin: 0 0 14px; color: rgba(31,41,55,.8); }
+  .astep { display: flex; align-items: center; gap: 12px; text-align: left;
+           background: #F7F6F2; border-radius: 14px; padding: 13px 14px; margin-top: 9px;
+           opacity: .35; transition: opacity .25s; }
+  .astep.on { opacity: 1; }
+  .astep .tick { width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%;
+                 background: #E4F1E9; color: #2E7D5B; display: flex; align-items: center;
+                 justify-content: center; font-weight: 800; font-size: 14px; }
+  .astep.working .tick { background: #F8EFD8; color: #C98A2B; }
+  .astep .amain { flex: 1; }
+  .astep .at { font-weight: 700; font-size: 14.5px; }
+  .astep .ad { font-size: 12px; color: rgba(31,41,55,.5); }
+  .adjust { border: 0; background: transparent; color: rgba(31,41,55,.45); cursor: pointer;
+            font: 600 12px -apple-system, system-ui; text-decoration: underline; padding: 2px 4px; }
 
   .foot { display: block; text-align: center; font-size: 12px; color: rgba(31,41,55,.38);
           margin-top: 22px; }
@@ -166,25 +181,25 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
     <div id="chips" class="chips"></div>
     <details class="why" id="whyRes"><summary><span class="chev">›</span> Why?</summary><p id="why"></p></details>
     <button id="more" class="cta" hidden>Add that shot 📷</button>
-    <button id="sell" class="cta" hidden>Sell it for me →</button>
     <button id="again" class="ghostbtn">Try another</button>
   </div>
 
-  <div id="price" class="panel">
-    <div id="itemName"></div>
-    <div id="priceBig"></div>
-    <div id="priceSub"></div>
-    <div id="comps" class="complist"></div>
-    <details class="why" id="whyPrice"><summary><span class="chev">›</span> How it got there</summary><p id="priceWhy"></p></details>
-    <button id="list" class="cta">List it</button>
-    <button id="again2" class="ghostbtn">Start over</button>
+  <div id="auto" class="panel">
+    <h3>Autopilot engaged</h3>
+    <div class="astep" id="as1"><span class="tick">✓</span><div class="amain"><div class="at">Verified real</div><div class="ad" id="as1d"></div></div></div>
+    <div class="astep" id="as2"><span class="tick">…</span><div class="amain"><div class="at">Pricing from live comps</div><div class="ad" id="as2d"></div></div></div>
+    <div class="astep" id="as3"><span class="tick">…</span><div class="amain"><div class="at">Listing</div><div class="ad" id="as3d"></div></div></div>
+    <div class="astep" id="as4"><span class="tick">…</span><div class="amain"><div class="at">Screening buyers</div><div class="ad" id="as4d"></div></div></div>
   </div>
 
   <div id="manage" class="panel">
     <div class="listing">
       <div><div id="mItem"></div><span class="vbadge">✓ verified real</span></div>
-      <div class="lp" id="mPrice"></div>
+      <div style="text-align:right"><div class="lp" id="mPrice"></div>
+        <button id="adjust" class="adjust">adjust price</button></div>
     </div>
+    <details class="why" id="whyPrice"><summary><span class="chev">›</span> How the agent priced it</summary>
+      <div id="comps" class="complist"></div><p id="priceWhy"></p></details>
     <div class="sect">The agent screened your buyers</div>
     <div id="buyers"></div>
     <div id="topreply" class="topreply" hidden></div>
@@ -241,7 +256,7 @@ function renderShoot() {
 function chip(text, cls) { return '<span class="' + cls + '">' + text + '</span>'; }
 function esc(s) { return String(s).replace(/[<>&]/g, function (c) { return { "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]; }); }
 function panel(id, label) {
-  ["shoot", "res", "price", "manage"].forEach(function (p) { $(p).style.display = "none"; });
+  ["shoot", "res", "auto", "manage"].forEach(function (p) { $(p).style.display = "none"; });
   $("busy").style.display = id === "busy" ? "block" : "none";
   if (id === "busy") { $("busyLabel").textContent = label; return; }
   $(id).style.display = id === "shoot" ? "flex" : "block";
@@ -276,7 +291,7 @@ function verify() {
       $("chips").innerHTML = chip("Agent wants proof", "c-amber");
       $("why").textContent = v.request || "Take one more photo from a different angle.";
       $("whyRes").open = true;
-      $("sell").hidden = true; $("more").hidden = false;
+      $("more").hidden = false;
       panel("res");
       return;
     }
@@ -289,7 +304,8 @@ function verify() {
     $("nameEdit").value = v.itemName || "";
     $("nameEdit").style.display = ok ? "block" : "none";
     $("condline").textContent = ok && v.condition ? "Condition: " + v.condition : "";
-    // short chips only: green = passed checks, coral = defects (each ≤4 words from the model)
+    if (ok) { runAutopilot(v); return; }
+    // refused: show the honest verdict — this is the anti-fake gate doing its job
     var chips = [];
     if (v.isRealScene) chips.push(chip("Live scene", "c-green"));
     else chips.push(chip("Photo of a screen", "c-coral"));
@@ -298,43 +314,59 @@ function verify() {
     $("chips").innerHTML = chips.join("");
     $("why").textContent = v.reasoning || "";
     $("whyRes").open = false;
-    $("sell").hidden = !ok;
     panel("res");
   }).catch(function (e) {
     $("res").className = "panel no"; $("verdict").textContent = "Something broke";
     $("nameEdit").style.display = "none"; $("condline").textContent = "";
     $("chips").innerHTML = ""; $("why").textContent = String(e.message || e);
-    $("sell").hidden = true; panel("res");
+    panel("res");
   });
 }
 
-function itemName() { return ($("nameEdit").value || verdict.itemName || "item").trim(); }
-
-$("sell").onclick = function () {
-  panel("busy", "Finding what it's worth…");
+// ————— THE AUTOPILOT: verified → priced → listed → buyers screened, hands-free.
+// The human owns the money at the end (adjust price, accept a buyer) — but the
+// selling legwork flies on its own.
+function step(id, state, detail) {
+  var el = $(id);
+  el.className = "astep " + state;
+  el.querySelector(".tick").textContent = state === "working" ? "…" : "✓";
+  if (detail != null) $(id + "d").textContent = detail;
+}
+function runAutopilot(v) {
+  panel("auto");
+  step("as1", "on", (v.itemName || "item") + " · " + (v.condition || ""));
+  step("as2", "on working", "searching the live market…");
   fetch("/price", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: itemName(), verdict: verdict }),
+    body: JSON.stringify({ title: v.itemName || "item", verdict: v }),
   }).then(function (r) { return r.json(); }).then(function (p) {
     if (p.error) throw new Error(p.error);
     lastPrice = p;
-    $("itemName").textContent = itemName();
-    $("priceBig").textContent = "$" + p.suggestedUSD;
-    $("priceSub").textContent = "won't go below $" + p.floorUSD;
-    $("comps").innerHTML = (p.comps || []).slice(0, 3).map(function (c) {
-      return '<div class="comprow"><span class="lbl">' + esc(c.label) + '</span><span class="amt">$' + c.priceUSD + '</span></div>';
-    }).join("");
-    $("priceWhy").textContent = p.rationale || "";
-    $("whyPrice").open = false;
-    $("list").textContent = "List it for $" + p.suggestedUSD;
-    panel("price");
+    step("as2", "on", "$" + p.suggestedUSD + " · floor $" + p.floorUSD);
+    step("as3", "on working", "");
+    setTimeout(function () {
+      step("as3", "on", "live on the board at $" + p.suggestedUSD);
+      step("as4", "on working", "ranking claims, drafting replies…");
+      fetch("/triage", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: v.itemName || "item", priceUSD: p.suggestedUSD,
+                               floorUSD: p.floorUSD, claims: DEMO_BUYERS }),
+      }).then(function (r) { return r.json(); }).then(function (tg) {
+        var n = (tg && tg.ranked || []).length;
+        step("as4", "on", n + " buyers screened");
+        setTimeout(function () { showManage(v, p, tg); }, 700);
+      }).catch(function () { step("as4", "on", "screening failed — buyers arrive later");
+        setTimeout(function () { showManage(v, p, null); }, 700); });
+    }, 500);
   }).catch(function (e) {
     $("res").className = "panel no"; $("verdict").textContent = "Couldn't price it";
     $("nameEdit").style.display = "none"; $("condline").textContent = "";
     $("chips").innerHTML = ""; $("why").textContent = String(e.message || e);
-    $("sell").hidden = true; panel("res");
+    panel("res");
   });
-};
+}
+
+function itemName() { return (verdict && verdict.itemName || "item").trim(); }
 
 // Listing it flips to the manage view: the actual listing + the agent screening
 // buyers. Demo buyers mirror the seeded board (a real inquiry, a scam, a lowball).
@@ -344,51 +376,56 @@ var DEMO_BUYERS = [
   { id: "b3", name: "Rita", message: "Would you take half?" }
 ];
 
-$("list").onclick = function () {
-  $("mItem").textContent = itemName();
-  $("mPrice").textContent = "$" + (lastPrice ? lastPrice.suggestedUSD : "");
-  $("buyers").innerHTML = "";
-  panel("busy", "The agent is screening buyers…");
-  fetch("/triage", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: itemName(), priceUSD: lastPrice ? lastPrice.suggestedUSD : 0,
-                           floorUSD: lastPrice ? lastPrice.floorUSD : null, claims: DEMO_BUYERS }),
-  }).then(function (r) { return r.json(); }).then(function (t) {
-    var ranked = (t && t.ranked) || [];
-    // classify each buyer into good / lowball / scam from score + flags
-    function verdictOf(b) {
-      var scam = b.score <= 15 || (b.flags || []).some(function (f) { return /scam|overpay|shipping|check|fraud/i.test(f); });
-      if (scam) return { cls: "bad", ic: "✕", word: "Likely scam — skip" };
-      if (b.score >= 70) return { cls: "good", ic: "✓", word: "Solid — ready to meet" };
-      if (b.counterUSD) return { cls: "mid", ic: "~", word: "Lowball — agent counters at $" + b.counterUSD };
-      return { cls: "mid", ic: "~", word: "Lowballing" };
+// The landing screen of the autopilot run: the live listing + screened buyers.
+// The human's two levers live here — adjust the price, accept a buyer.
+function showManage(v, p, tg) {
+  $("mItem").textContent = v.itemName || "item";
+  $("mPrice").textContent = "$" + p.suggestedUSD;
+  $("comps").innerHTML = (p.comps || []).slice(0, 3).map(function (c) {
+    return '<div class="comprow"><span class="lbl">' + esc(c.label) + '</span><span class="amt">$' + c.priceUSD + '</span></div>';
+  }).join("");
+  $("priceWhy").textContent = p.rationale || "";
+  $("whyPrice").open = false;
+  $("adjust").onclick = function () {
+    var now = prompt("Your price (the agent proposed $" + p.suggestedUSD + ", floor $" + p.floorUSD + ")",
+                     String(lastPrice ? lastPrice.suggestedUSD : p.suggestedUSD));
+    var n = Math.round(Number(now));
+    if (Number.isFinite(n) && n > 0) {
+      lastPrice = Object.assign({}, p, { suggestedUSD: n });
+      $("mPrice").textContent = "$" + n;
     }
-    $("buyers").innerHTML = ranked.map(function (b) {
-      var who = (DEMO_BUYERS.filter(function (d) { return d.id === b.id; })[0] || {}).name || b.id;
-      var v = verdictOf(b);
-      return '<div class="buyer ' + v.cls + '"><span class="bic">' + v.ic + '</span>' +
-        '<div class="bmain"><div class="bname">' + esc(who) + '</div>' +
-        '<div class="bword">' + v.word + '</div></div><span class="bscore">' + b.score + '</span></div>';
-    }).join("");
-    // only the top buyer gets a drafted reply + an accept button
-    var top = ranked[0];
-    if (top && top.score >= 70) {
-      var who = (DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {}).name || "buyer";
-      $("topreply").innerHTML = "<b>Drafted reply to " + esc(who) + "</b><br>" + esc(top.draftReply || "");
-      $("topreply").hidden = false;
-      $("accept").hidden = false;
-      $("accept").disabled = false;
-      $("accept").textContent = "Accept " + who;
-      $("accept").onclick = function () { this.textContent = "✓ Accepted — meeting " + who; this.disabled = true; };
-    } else {
-      $("topreply").hidden = true; $("accept").hidden = true;
-    }
-    panel("manage");
-  }).catch(function () {
-    $("buyers").innerHTML = ""; $("topreply").hidden = true; $("accept").hidden = true;
-    panel("manage");
-  });
-};
+  };
+  var ranked = (tg && tg.ranked) || [];
+  // classify each buyer into good / lowball / scam from score + flags
+  function verdictOf(b) {
+    var scam = b.score <= 15 || (b.flags || []).some(function (f) { return /scam|overpay|shipping|check|fraud/i.test(f); });
+    if (scam) return { cls: "bad", ic: "✕", word: "Likely scam — skip" };
+    if (b.score >= 70) return { cls: "good", ic: "✓", word: "Solid — ready to meet" };
+    if (b.counterUSD) return { cls: "mid", ic: "~", word: "Lowball — agent counters at $" + b.counterUSD };
+    return { cls: "mid", ic: "~", word: "Lowballing" };
+  }
+  $("buyers").innerHTML = ranked.map(function (b) {
+    var who = (DEMO_BUYERS.filter(function (d) { return d.id === b.id; })[0] || {}).name || b.id;
+    var w = verdictOf(b);
+    return '<div class="buyer ' + w.cls + '"><span class="bic">' + w.ic + '</span>' +
+      '<div class="bmain"><div class="bname">' + esc(who) + '</div>' +
+      '<div class="bword">' + w.word + '</div></div><span class="bscore">' + b.score + '</span></div>';
+  }).join("");
+  // only the top buyer gets a drafted reply + an accept button
+  var top = ranked[0];
+  if (top && top.score >= 70) {
+    var who = (DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {}).name || "buyer";
+    $("topreply").innerHTML = "<b>Drafted reply to " + esc(who) + "</b><br>" + esc(top.draftReply || "");
+    $("topreply").hidden = false;
+    $("accept").hidden = false;
+    $("accept").disabled = false;
+    $("accept").textContent = "Accept " + who;
+    $("accept").onclick = function () { this.textContent = "✓ Accepted — meeting " + who; this.disabled = true; };
+  } else {
+    $("topreply").hidden = true; $("accept").hidden = true;
+  }
+  panel("manage");
+}
 
 function reset() {
   frames = []; verdict = null; lastPrice = null; pending = null;
@@ -397,7 +434,6 @@ function reset() {
 }
 $("more").onclick = function () { $("cap").click(); };
 $("again").onclick = reset;
-$("again2").onclick = reset;
 $("again3").onclick = reset;
 
 // Default to the phone app; show the QR ONLY on a real desktop (hover + fine pointer).

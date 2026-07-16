@@ -8,25 +8,28 @@ Paste-ready text for the Devpost form. Track: **Autopilot Agent**.
 onlist-agent
 
 ## Tagline (≤ 200 chars)
-An autopilot for selling real things that refuses to list anything it can't
-prove is physical. Verify → price → list → handle buyers — the agent does the
-legwork, a human owns every dollar.
+Photograph a thing — and it's sold. The agent prices it from the live market,
+lists it, and handles the buyers on its own; you just adjust the price and tap
+accept. It also refuses to fly fakes.
 
 ## Elevator pitch (the "what")
-Point your phone at anything you want to sell. The agent examines the frames
-and proves it's a real object in your hands — not a screenshot, not a re-shot
-catalog photo, not an AI render. Then it prices it with live market comps,
-lists it, screens the buyers, flags the scams, and counters the lowballs within
-a floor you delegated. You confirm the price and tap accept on the buyer.
-Everything else is the agent's job. **Try it live: https://agent.onlist.ai**
+Point your phone at anything you want to sell — and watch the autopilot fly:
+it names the item, prices it from live market comps, **lists it**, screens the
+buyers, flags the scams, and counters the lowballs within a floor it proposed.
+You land on a live listing with a drafted reply to the best buyer. Your only
+two touches are money touches: adjust the price if you want, tap accept.
+Under the hood there's a gate that makes the autopilot trustworthy: it refuses
+to list anything it can't prove is a real physical object — no screenshots, no
+re-shot catalog photos, no AI renders. **Try it live: https://agent.onlist.ai**
 
 ## Inspiration
-2026 is the year marketplace trust broke: AI-generated listings — perfect
-photos of items that never existed — flooded every platform. Everyone upstream
-(the marketplaces, the payment rails) treats it as a moderation problem. We
-think it's a listing-creation problem: if an agent refuses to *create* a
-listing without proof of a physical object, the fakes never enter the market.
-The agent isn't just a convenience — it's the trust layer.
+Everyone owns things they'd sell "if it weren't such a hassle" — the pricing
+research, the listing, the inbox of scammers and hagglers. That middle is
+exactly what agents are for: delegate the legwork, keep the human on the
+money. And 2026 added a twist that shaped the design: AI-generated fake
+listings flooded every marketplace, so an autopilot that lists things FOR you
+must also be the trust layer — it refuses to create a listing without proof
+of a real physical object in your hands.
 
 ## What it does
 - **Verify 2.0 — the anti-fake gate.** Qwen3.7-VL examines 2–4 frames from a
@@ -75,8 +78,9 @@ The decision policy (`decide()`) is a pure function with 12 unit-tested
 boundary cases.
 
 ## Human-in-the-loop, by design
-The agent never spends, promises, or sells. Three checkpoints are structural:
-the price is confirmed by the human, buyer accept/decline is a human tap, and
+The agent never spends, promises, or sells — it flies the legwork and parks at
+the money. Three human levers are structural: the listed price is adjustable
+by the human at any moment, buyer accept/decline is a human tap, and
 counter-offers exist only inside the delegated floor — enforced in code, not
 in a prompt.
 

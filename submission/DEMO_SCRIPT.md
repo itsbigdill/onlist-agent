@@ -1,90 +1,89 @@
 # onlist-agent — demo video script (~2:30)
 
-Goal: in under three minutes a judge sees the one thing nobody else has — an
-agent that REFUSES to list what it can't prove is physical — plus the agentic
-loop, the delegated negotiation, and the receipts. Record the phone screen
-(agent.onlist.ai) for the main flow + a short laptop cut for the bench README.
+Goal: the judge sees an AUTOPILOT — one capture in, a live listing with
+screened buyers out, hands-free — and then the twist that makes it
+trustworthy: it refuses to fly fakes. Record the phone screen
+(agent.onlist.ai) for the main flow + a short laptop cut for the receipts.
 
 Setup before recording:
 - Phone with https://agent.onlist.ai open (fresh session).
 - A real object on the desk (e.g. headphones or a watch).
-- A product photo of some gadget opened FULL-SCREEN on your monitor.
-- Laptop browser tab with the GitHub README benchmark section.
+- A product photo opened FULL-SCREEN on your monitor (for the fool-me beat).
+- Laptop tab with the GitHub README (benchmark table + architecture diagram).
 
 ---
 
-### 0:00–0:20 — The problem, then the hook
-> "In 2026 marketplaces are drowning in fake listings — AI-generated photos of
-> things that don't exist. Everyone treats it as a moderation problem. We built
-> the opposite: a selling agent that refuses to create a listing unless it can
-> prove there's a real object in your hands. This is onlist-agent, live on
-> Alibaba Cloud."
+### 0:00–0:15 — The premise
+> "Everyone owns things they'd sell if it weren't such a hassle — the pricing
+> research, the listing, the inbox full of scammers. This is onlist-agent:
+> photograph a thing, and it's sold. Live on Alibaba Cloud."
 
-- Show the phone: agent.onlist.ai landing with the camera prompt.
+- Phone: the landing with the camera prompt.
 
-### 0:20–0:50 — The fool-me test FIRST (the wow)
-> "Let's try to scam it."
+### 0:15–1:00 — THE AUTOPILOT (the money shot — one unbroken take)
+> "Watch. Two photos — and hands off."
 
-- Point the phone at the **monitor** showing a product photo. Shoot 2 angles
-  of the screen.
-- The agent: **Not real ✕ — Photo of a screen**. Open "Why?" and read one line
-  of the reasoning aloud.
-> "It caught the moiré and the missing parallax. No listing. And in the repo
-> there's a benchmark where it catches AI-generated listing photos too —
-> including fakes made with qwen-image, its own model family."
+- Photograph the real object, two angles. Then DON'T touch the phone — let the
+  timeline check itself off on camera:
+  - ✓ Verified real — *name · condition*
+  - ✓ Priced $XXX · floor $YYY *(live web comps)*
+  - ✓ **Listed** — live on the board
+  - ✓ 3 buyers screened
+- Land on the listing screen.
+> "The agent named it, priced it from live market comps, listed it, and
+> screened the buyers — while I did nothing. Alex is real, with a reply
+> already drafted. The 'certified check shipping agent' — flagged as a scam.
+> Rita offered half — the agent countered at $575, never going below the
+> floor it set. That bound lives in code, not in a prompt."
 
-- (2-second cut to the laptop: README benchmark table, "fakes caught 6/6".)
+### 1:00–1:20 — The two human levers
+- Tap **adjust price** → change the number → the listing updates.
+- Tap **Accept Alex**.
+> "I touch money twice: the price is mine to adjust, and no buyer gets a deal
+> without my tap. Everything else — flown by the agent."
 
-### 0:50–1:30 — The honest flow + the agentic ask
-> "Now the real thing."
+### 1:20–1:50 — Why you can trust an autopilot: the fake test
+> "But an autopilot that lists things for you had better not list lies.
+> Let's try to scam it."
 
-- Photograph the real object, 2 angles. Verified ✓: name, condition, defect
-  chips.
-- If the agent returns **"One more angle"** (amber panel) — PERFECT, show it:
-> "When it's unsure it doesn't guess — it tells me exactly which shot would
-> settle it, and re-examines."
-  (You can provoke it deliberately: shoot 2 nearly identical angles without
-  moving — the parallax doubt often triggers the ask.)
-- Tap **Sell it for me** → price appears with comps.
-> "It searched the live market, found comparables, proposed a price AND a
-> floor for negotiations. I own the number — I can edit it — the agent never
-> lists without me."
+- Point the phone at the **monitor** with the product photo. Shoot 2 angles.
+- **Not real ✕ — Photo of a screen.** Open "Why?" and read one line.
+> "Caught the moiré and the missing parallax. Refused to fly it. In the repo
+> there's a benchmark — it also catches AI-generated listing photos, including
+> fakes made with qwen-image, its own model family: six out of six."
+- (2-second laptop cut: README benchmark table.)
 
-### 1:30–2:05 — Buyers: scam flagged, lowball countered
-- Tap **List it** → the buyer screen.
-> "Three buyers. The agent ranked them: Alex is real — drafted a warm reply.
-> The 'shipping agent with a certified check' — flagged as a scam, score 5,
-> no reply. And Rita offered half price — the agent countered at $575,
-> because I delegated a floor of $520. That bound lives in code, not in a
-> prompt: it can never go below the floor and never reveals it."
+### 1:50–2:10 — The agentic beat (if it triggers — never fake it)
+- If during any capture the amber **"One more angle"** panel appears:
+> "And when it's unsure, it doesn't guess — it tells me exactly which shot
+> would settle it, and re-examines."
+- (Provoke it deliberately if you want: two near-identical shots without
+  moving the phone. If it doesn't trigger, cut this beat or show the amber
+  panel screenshot from the README.)
 
-- Tap **Accept** on the top buyer.
-
-### 2:05–2:30 — Receipts + close
-- (Laptop cut: repo — cost ledger output, architecture diagram, one glance at
-  `decide()` in verify.ts.)
-> "Everything runs on Alibaba Cloud — Qwen VL is the examiner, Function
-> Compute hosts it, every call is metered into a cost ledger: this whole
-> session cost about five cents. An agent that does the legwork, acts on its
-> own doubt, negotiates within bounds I set — and a human owns every dollar.
-> onlist-agent. Try it: agent point onlist point ai."
+### 2:10–2:30 — Receipts + close
+- (Laptop cut: cost ledger output, architecture diagram.)
+> "All of it runs on Alibaba Cloud — Qwen VL as the examiner, Function Compute
+> hosting, every call metered: this whole session cost about five cents.
+> Photograph a thing — and it's sold. onlist-agent. Try it:
+> agent dot onlist dot ai."
 
 ---
 
 ## Shot checklist
-- [ ] Landing on the phone (camera prompt)
-- [ ] Screen re-shot → Not real ✕ + reasoning
-- [ ] README bench table close-up (6/6)
-- [ ] Real object → Verified ✓ (chips, condition)
-- [ ] "One more angle" amber panel (provoke with two static shots if needed)
-- [ ] Price + floor + comps; edit the number once to show ownership
-- [ ] Buyer triage: scam ✕ / lowball countered at $XXX / top buyer reply
+- [ ] Landing with camera prompt
+- [ ] The unbroken autopilot take: 2 photos → timeline checks off → listing
+- [ ] Buyers screen: scam ✕ / Rita countered at $XXX / Alex reply draft
+- [ ] adjust price tap → number changes
 - [ ] Accept tap
-- [ ] Cost ledger + architecture diagram + decide() glimpse
+- [ ] Monitor re-shot → Not real ✕ + reasoning
+- [ ] README bench table close-up (6/6)
+- [ ] (bonus) "One more angle" amber panel
+- [ ] Cost ledger + architecture diagram
 
 ## Tips
-- Do the fool-me FIRST — it's the memorable beat; don't bury it.
-- Keep the phone screen recording native (iOS screen record), voice over later.
-- If "One more angle" doesn't trigger naturally, don't fake it — cut the line
-  and mention it over the amber-panel screenshot from the README instead.
-- Total under 3:00; judges are not required to watch past that.
+- The unbroken autopilot take is the whole pitch — rehearse it once so the
+  cascade lands in one clean shot (~30-40s wall-clock).
+- Fool-me comes AFTER the autopilot: first the magic, then the trust.
+- Native screen recording, voice-over later; captions help judges with sound off.
+- Total under 3:00.

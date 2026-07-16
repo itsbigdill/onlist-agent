@@ -20,27 +20,29 @@ Setup before recording:
 
 - Phone: the landing with the camera prompt.
 
-### 0:15–1:00 — THE AUTOPILOT (the money shot — one unbroken take)
-> "Watch. Two photos — and hands off."
+### 0:15–1:10 — THE AUTOPILOT (the money shot — one unbroken take)
+> "Watch. Two photos."
 
-- Photograph the real object, two angles. Then DON'T touch the phone — let the
-  timeline check itself off on camera:
-  - ✓ Verified real — *name · condition*
-  - ✓ Priced $XXX · floor $YYY *(live web comps)*
-  - ✓ **Listed** — live on the board
-  - ✓ 3 buyers screened
-- Land on the listing screen.
-> "The agent named it, priced it from live market comps, listed it, and
-> screened the buyers — while I did nothing. Alex is real, with a reply
-> already drafted. The 'certified check shipping agent' — flagged as a scam.
-> Rita offered half — the agent countered at $575, never going below the
-> floor it set. That bound lives in code, not in a prompt."
+- Photograph the real object, two angles. The agent examines it and comes back
+  with the OFFER screen:
+> "It verified the thing is real, sized the live market, and made me an offer:
+> this sells for $520 to $650. That range is the whole contract — my one
+> decision."
+- Tap **Sell it for me →** and DON'T touch the phone. The timeline checks
+  itself off on camera:
+  - ✓ Listed — live at $650
+  - ✓ 3 buyers handled · 1 countered in-range
+  - ✓ **SOLD to Alex for $650**
+- The sold screen appears with the shipping label.
+> "While I did nothing: it listed, declined the 'certified check' scammer FOR
+> me, countered the lowballer at $575 — never below my range, which is
+> enforced in code, not in a prompt — and closed with the real buyer. And the
+> prepaid shipping label? Already in my email. My next touch is a box."
 
-### 1:00–1:20 — The two human levers
-- Tap **adjust price** → change the number → the listing updates.
-- Tap **Accept Alex**.
-> "I touch money twice: the price is mine to adjust, and no buyer gets a deal
-> without my tap. Everything else — flown by the agent."
+### 1:10–1:20 — Underline the delegation
+- Point at the label on screen.
+> "One decision — the range. Everything after that tap was the agent's job,
+> inside bounds that are written down."
 
 ### 1:20–1:50 — Why you can trust an autopilot: the fake test
 > "But an autopilot that lists things for you had better not list lies.
@@ -72,10 +74,9 @@ Setup before recording:
 
 ## Shot checklist
 - [ ] Landing with camera prompt
-- [ ] The unbroken autopilot take: 2 photos → timeline checks off → listing
-- [ ] Buyers screen: scam ✕ / Rita countered at $XXX / Alex reply draft
-- [ ] adjust price tap → number changes
-- [ ] Accept tap
+- [ ] The unbroken take: 2 photos → OFFER ($X–Y) → tap → timeline → SOLD
+- [ ] The shipping-label card + "emailed to you" note
+- [ ] Buyers recap: scam declined / Rita countered at $XXX / deal closed
 - [ ] Monitor re-shot → Not real ✕ + reasoning
 - [ ] README bench table close-up (6/6)
 - [ ] (bonus) "One more angle" amber panel

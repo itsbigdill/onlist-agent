@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "onlist-agent", "runtimeExecutable": "node", "runtimeArgs": ["--env-file=.env", "dist/server.js"], "port": 8080 }
+  ]
+}

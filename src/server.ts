@@ -35,7 +35,14 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
 <style>
   * { box-sizing: border-box; }
   body { font: 16px/1.5 -apple-system, system-ui; background: #F0EFEB; color: #1F2937;
-         max-width: 480px; margin: 0 auto; padding: 32px 18px; }
+         max-width: 480px; margin: 0 auto; padding: 32px 18px; min-height: 100vh; }
+  /* Qwen-style frost gradient blobs behind the glass */
+  body::before, body::after { content: ""; position: fixed; z-index: -1; border-radius: 50%;
+         filter: blur(70px); opacity: .5; pointer-events: none; }
+  body::before { width: 380px; height: 380px; top: -90px; right: -110px;
+         background: radial-gradient(circle at 35% 35%, #8B7CF8, #C084FC 60%, transparent 75%); }
+  body::after { width: 420px; height: 420px; bottom: -140px; left: -130px;
+         background: radial-gradient(circle at 60% 40%, #7DAEF8, #A78BFA 55%, transparent 75%); }
   .wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 22px; }
   .dot { color: #DD7A51; }
   .tiny { font-size: 12px; color: rgba(31,41,55,.45); word-break: break-all; }
@@ -51,8 +58,10 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #app { display: none; }
   #shoot { display: flex; flex-direction: column; align-items: center; justify-content: center;
            gap: 8px; width: 100%; min-height: 240px; cursor: pointer;
-           background: #fff; border: 2px dashed rgba(31,41,55,.18); border-radius: 28px;
-           box-shadow: 0 18px 44px rgba(31,41,55,.08); transition: border-color .2s; }
+           background: rgba(255,255,255,.55); border: 2px dashed rgba(255,255,255,.9);
+           -webkit-backdrop-filter: blur(26px) saturate(1.6); backdrop-filter: blur(26px) saturate(1.6);
+           border-radius: 28px;
+           box-shadow: 0 18px 44px rgba(80,70,160,.10); transition: border-color .2s; }
   #shoot:active { border-color: #DD7A51; }
   #shoot svg { width: 40px; height: 40px; color: #DD7A51; }
   #shoot b { font-size: 18px; }
@@ -70,8 +79,11 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
           animation: sp 0.8s linear infinite; }
   @keyframes sp { to { transform: rotate(360deg); } }
 
-  .panel { display: none; text-align: center; background: #fff; border-radius: 28px; padding: 30px 22px;
-           box-shadow: 0 18px 44px rgba(31,41,55,.10); }
+  .panel { display: none; text-align: center; border-radius: 28px; padding: 30px 22px;
+           background: rgba(255,255,255,.62);
+           -webkit-backdrop-filter: blur(26px) saturate(1.6); backdrop-filter: blur(26px) saturate(1.6);
+           border: 1px solid rgba(255,255,255,.75);
+           box-shadow: 0 18px 44px rgba(80,70,160,.12); }
   #verdict { font-size: 26px; font-weight: 800; }
   #res.ok #verdict { color: #2E7D5B; }
   #res.no #verdict { color: #DD7A51; }
@@ -93,9 +105,10 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .why summary .chev { transition: transform .2s; }
   .why[open] summary .chev { transform: rotate(90deg); }
   .why p { font-size: 13px; line-height: 1.5; color: rgba(31,41,55,.55); margin: 10px 0 0; }
-  .cta { width: 100%; margin-top: 20px; border: 0; background: #1F2937; color: #fff;
+  .cta { width: 100%; margin-top: 20px; border: 0; color: #fff;
+         background: linear-gradient(120deg, #4F46E5, #7C3AED 55%, #A855F7);
          border-radius: 18px; padding: 19px; font: 800 18px -apple-system, system-ui; cursor: pointer;
-         box-shadow: 0 12px 28px rgba(31,41,55,.22); }
+         box-shadow: 0 12px 28px rgba(99,60,237,.35); }
   .cta:disabled { opacity: .45; box-shadow: none; }
   .ghostbtn { margin-top: 14px; border: 0; background: transparent; color: rgba(31,41,55,.5);
               font: 700 14px -apple-system, system-ui; cursor: pointer; }
@@ -111,14 +124,14 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .comprow .amt { font-weight: 700; white-space: nowrap; }
   /* listing + buyers (manage panel) */
   .listing { display: flex; justify-content: space-between; align-items: center; gap: 12px;
-             text-align: left; background: #F7F6F2; border-radius: 18px; padding: 15px 16px; }
+             text-align: left; background: rgba(255,255,255,.55); border-radius: 18px; padding: 15px 16px; }
   .listing .lp { font-size: 22px; font-weight: 800; }
   .vbadge { font-size: 11px; font-weight: 700; color: #2E7D5B; background: #E4F1E9;
             border-radius: 999px; padding: 3px 9px; display: inline-block; margin-top: 4px; }
   .sect { text-align: left; font-size: 13px; font-weight: 700; color: rgba(31,41,55,.5);
           margin: 22px 0 8px; }
   .buyer { display: flex; align-items: center; gap: 11px; text-align: left;
-           background: #F7F6F2; border-radius: 14px; padding: 12px 13px; margin-top: 9px; }
+           background: rgba(255,255,255,.55); border-radius: 14px; padding: 12px 13px; margin-top: 9px; }
   .buyer.bad { opacity: .5; }
   .buyer.bad .bname { text-decoration: line-through; }
   .bic { width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%; color: #fff;
@@ -137,7 +150,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   /* autopilot timeline: steps check off as the agent works */
   #auto h3 { font-size: 16px; margin: 0 0 14px; color: rgba(31,41,55,.8); }
   .astep { display: flex; align-items: center; gap: 12px; text-align: left;
-           background: #F7F6F2; border-radius: 14px; padding: 13px 14px; margin-top: 9px;
+           background: rgba(255,255,255,.55); border-radius: 14px; padding: 13px 14px; margin-top: 9px;
            opacity: .35; transition: opacity .25s; }
   .astep.on { opacity: 1; }
   .astep .tick { width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%;
@@ -148,8 +161,18 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .astep .at { font-weight: 700; font-size: 14.5px; }
   .astep .ad { font-size: 12px; color: rgba(31,41,55,.5); }
   /* the offer: the one human decision — authorize a sale range */
-  .range { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; margin: 6px 0 2px; }
-  .rangeSub { font-size: 13px; color: rgba(31,41,55,.5); }
+  .range { font-size: 48px; font-weight: 800; letter-spacing: -0.03em; margin: 8px 0 2px;
+           background: linear-gradient(95deg, #4F46E5, #9333EA 55%, #DD7A51);
+           -webkit-background-clip: text; background-clip: text; color: transparent; }
+  /* captured frames as a fanned sticker stack — the thing you're selling, front and center */
+  .stickfan { display: flex; justify-content: center; align-items: center; margin: 2px 0 12px; }
+  .stickfan:empty { display: none; }
+  .stick { width: 92px; height: 92px; object-fit: cover; border-radius: 22px;
+           border: 4px solid #fff; box-shadow: 0 12px 26px rgba(80,70,160,.25); }
+  .stick.s0 { transform: rotate(-8deg) translateX(12px); }
+  .stick.s1 { transform: rotate(3deg) translateY(-5px); position: relative; z-index: 2;
+              width: 104px; height: 104px; }
+  .stick.s2 { transform: rotate(9deg) translateX(-12px); }
   /* the prize: a ready-to-print shipping label lands in your email */
   .shiplabel { text-align: left; background: #fff; border: 2px dashed rgba(31,41,55,.25);
                border-radius: 14px; padding: 14px 16px; margin-top: 14px;
@@ -197,10 +220,10 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   </div>
 
   <div id="offer" class="panel">
-    <div id="offItem" style="font-size:15px;font-weight:600;color:rgba(31,41,55,.7)"></div>
-    <div id="offCond" class="condline"></div>
+    <div class="stickfan" id="offPhotos"></div>
+    <div id="offItem" style="font-size:16px;font-weight:700;color:rgba(31,41,55,.8)"></div>
     <div class="range" id="offRange"></div>
-    <div class="rangeSub">the agent will sell inside this range — never below</div>
+    <div class="chips" id="offChips"></div>
     <details class="why" id="whyOffer"><summary><span class="chev">›</span> How it sized the market</summary>
       <div id="offComps" class="complist"></div><p id="offWhy"></p></details>
     <button id="sellgo" class="cta">Sell it for me →</button>
@@ -367,7 +390,11 @@ function runAutopilot(v) {
     if (p.error) throw new Error(p.error);
     lastPrice = p;
     $("offItem").textContent = v.itemName || "item";
-    $("offCond").textContent = "Condition: " + (v.condition || "—") + " · verified real";
+    $("offPhotos").innerHTML = frames.slice(0, 3).map(function (f, i) {
+      return '<img class="stick s' + i + '" src="' + f + '" alt="">';
+    }).join("");
+    $("offChips").innerHTML = '<span class="c-green">✓ verified real</span>' +
+      (v.condition ? '<span class="c-amber">' + esc(v.condition) + "</span>" : "");
     $("offRange").textContent = "$" + p.floorUSD + "–" + p.suggestedUSD;
     $("offComps").innerHTML = (p.comps || []).slice(0, 3).map(function (c) {
       return '<div class="comprow"><span class="lbl">' + esc(c.label) + '</span><span class="amt">$' + c.priceUSD + '</span></div>';

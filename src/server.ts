@@ -43,9 +43,10 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
          background: radial-gradient(circle at 35% 35%, #8B7CF8, #C084FC 60%, transparent 75%); }
   body::after { width: 420px; height: 420px; bottom: -140px; left: -130px;
          background: radial-gradient(circle at 60% 40%, #7DAEF8, #A78BFA 55%, transparent 75%); }
-  .wordmark { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 22px; }
-  .wordmark small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .02em;
-                    color: rgba(31,41,55,.4); margin-top: 1px; }
+  .wordmark { display: inline-block; font-size: 24px; font-weight: 800; letter-spacing: -0.01em;
+              margin-bottom: 22px; line-height: 1.15; }
+  .wordmark small { display: block; font-size: 10.5px; font-weight: 600; text-align: justify;
+                    text-align-last: justify; color: rgba(31,41,55,.4); margin-top: -2px; }
   .dot { color: #DD7A51; }
   .tiny { font-size: 12px; color: rgba(31,41,55,.45); word-break: break-all; }
 
@@ -230,7 +231,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .foot a { color: inherit; }
 </style>
 <body>
-<div class="wordmark">onlist<span class="dot">.</span><small>autopilot sell AI</small></div>
+<div class="wordmark">onlist<span class="dot">.</span><small>autopilot agent</small></div>
 
 <div id="qr">
   <div class="tagwrap">

@@ -43,7 +43,9 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
          background: radial-gradient(circle at 35% 35%, #8B7CF8, #C084FC 60%, transparent 75%); }
   body::after { width: 420px; height: 420px; bottom: -140px; left: -130px;
          background: radial-gradient(circle at 60% 40%, #7DAEF8, #A78BFA 55%, transparent 75%); }
-  .wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 22px; }
+  .wordmark { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 22px; }
+  .wordmark small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .02em;
+                    color: rgba(31,41,55,.4); margin-top: 1px; }
   .dot { color: #DD7A51; }
   .tiny { font-size: 12px; color: rgba(31,41,55,.45); word-break: break-all; }
 
@@ -66,9 +68,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
              box-shadow: inset 0 1px 2px rgba(31,41,55,.18); }
   #qr img { border-radius: 14px; display: block; }
   .tagtitle { margin-top: 26px; padding-top: 22px; border-top: 1.5px dashed rgba(31,41,55,.10);
-              font-size: 30px; font-weight: 900; letter-spacing: .12em;
-              background: linear-gradient(95deg, #4F46E5, #9333EA 60%, #DD7A51);
-              -webkit-background-clip: text; background-clip: text; color: transparent; }
+              font-size: 30px; font-weight: 900; letter-spacing: .12em; color: #1F2937; }
   /* powered-by: one quiet line */
   .powered { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600;
              color: rgba(31,41,55,.42); opacity: .9; }
@@ -229,7 +229,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .foot a { color: inherit; }
 </style>
 <body>
-<div class="wordmark">onlist-agent<span class="dot">.</span></div>
+<div class="wordmark">onlist<span class="dot">.</span><small>autopilot sell AI</small></div>
 
 <div id="qr">
   <div class="tagwrap">

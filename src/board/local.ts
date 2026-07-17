@@ -21,6 +21,9 @@ export interface Board {
   list(): Promise<BoardItem[]>;
   get(id: string): Promise<BoardItem | null>;
   update(id: string, patch: Partial<BoardItem>): Promise<void>;
+  /** Demo board only: a live capture just proved the object — the human with
+      the camera creates it. The onlist adapter deliberately has no add(). */
+  add?(item: Omit<BoardItem, "id">): Promise<BoardItem>;
   label: string;
 }
 
@@ -59,6 +62,13 @@ export function localBoard(): Board {
       if (!item) throw new Error(`no item ${id}`);
       Object.assign(item, patch);
       save(items);
+    },
+    async add(item) {
+      const items = load();
+      const created = { ...item, id: `cap-${Date.now().toString(36)}` } as BoardItem;
+      items.unshift(created);
+      save(items);
+      return created;
     },
   };
 }

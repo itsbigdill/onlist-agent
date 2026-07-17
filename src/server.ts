@@ -15,6 +15,8 @@ import { priceItem } from "./price.js";
 import { triageClaims } from "./triage.js";
 import { verifyAgentic, type Prior, type Verdict } from "./verify.js";
 import { recordEvidence, evidenceEnabled } from "./evidence.js";
+import { publishToEbay, ebayEnabled } from "./ebay.js";
+import { mkdirSync, writeFileSync, readFileSync as readFileSyncFs, existsSync as existsSyncFs } from "node:fs";
 import { weeklyDigest } from "./digest.js";
 import { localBoard } from "./board/local.js";
 
@@ -254,6 +256,7 @@ function shrink(file) {
 var verdict = null;
 var lastPrice = null;
 var pending = null;   // agent asked for one more angle: { reasoning, request }
+var lastListing = null; // /list result: { board, ebay: {listingId, url} | null }
 
 // Two-slot shoot UI: filled thumbnails + a dashed placeholder for what's still needed.
 function renderShoot() {
@@ -385,9 +388,15 @@ function runAutopilot(v) {
 // inside the authorized range. The human's next touch is sticking a label on a box.
 function engage(v, p) {
   panel("auto");
-  step("as1", "on working", "");
-  setTimeout(function () {
-    step("as1", "on", "live on the board at $" + p.suggestedUSD);
+  step("as1", "on working", "publishing…");
+  fetch("/list", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: v.itemName || "item", condition: v.condition || "used",
+                           priceUSD: p.suggestedUSD, frame: frames[0] || null }),
+  }).then(function (r) { return r.json(); }).then(function (li) {
+    lastListing = li;
+    if (li.ebay) step("as1", "on", "live on eBay sandbox · #" + li.ebay.listingId);
+    else step("as1", "on", "live on the board at $" + p.suggestedUSD);
     step("as2", "on working", "ranking claims, drafting replies, countering…");
     fetch("/triage", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -414,7 +423,12 @@ function engage(v, p) {
       step("as3", "on", "listed — the agent keeps working");
       setTimeout(function () { showSold(v, p, null, false); }, 800);
     });
-  }, 600);
+  }).catch(function () {
+    step("as1", "on", "live on the board at $" + p.suggestedUSD);
+    step("as2", "on", "screening skipped");
+    step("as3", "on", "listed — the agent keeps working");
+    setTimeout(function () { showSold(v, p, null, false); }, 800);
+  });
 }
 
 function itemName() { return (verdict && verdict.itemName || "item").trim(); }
@@ -444,17 +458,19 @@ function showSold(v, p, tg, sellable) {
       '<div class="bmain"><div class="bname">' + esc(who) + '</div>' +
       '<div class="bword">' + w.word + '</div></div><span class="bscore">' + b.score + '</span></div>';
   }).join("");
+  var ebayLine = (lastListing && lastListing.ebay)
+    ? ' · <a href="' + lastListing.ebay.url + '" target="_blank" style="color:inherit">eBay #' + lastListing.ebay.listingId + "</a>" : "";
   if (sellable) {
     var top = ranked[0];
     var who = (DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {}).name || "buyer";
     $("soldTitle").textContent = "Sold — $" + p.suggestedUSD;
-    $("soldSub").textContent = (v.itemName || "item") + " → " + who;
+    $("soldSub").innerHTML = esc(v.itemName || "item") + " → " + esc(who) + ebayLine;
     $("shipTo").innerHTML = esc(who) + " M.<br>2847 Juniper Lane<br>Orlando, FL 32803";
     $("label").hidden = false;
     $("labelNote").textContent = "📬 This prepaid label was just emailed to you. Stick it on a box — the courier does the rest.";
   } else {
     $("soldTitle").textContent = "Live — $" + p.suggestedUSD;
-    $("soldSub").textContent = (v.itemName || "item") + " · the agent keeps negotiating inside your range";
+    $("soldSub").innerHTML = esc(v.itemName || "item") + " · negotiating inside your range" + ebayLine;
     $("label").hidden = true;
     $("labelNote").textContent = "📬 The moment it sells, a prepaid shipping label lands in your email.";
   }
@@ -462,7 +478,7 @@ function showSold(v, p, tg, sellable) {
 }
 
 function reset() {
-  frames = []; verdict = null; lastPrice = null; pending = null;
+  frames = []; verdict = null; lastPrice = null; pending = null; lastListing = null;
   $("more").hidden = true;
   ["as1", "as2", "as3"].forEach(function (s) { step(s, "", ""); });
   renderShoot();
@@ -563,6 +579,52 @@ createServer(async (req, res) => {
         Number.isFinite(Number(b.floorUSD)) ? Number(b.floorUSD) : null,
       );
       return json(res, result ? 200 : 422, result ?? { error: "no triage" });
+    }
+    if (req.method === "POST" && req.url === "/list") {
+      const b = await readBody(req);
+      const title = String(b.title ?? "item").slice(0, 120);
+      const condition = String(b.condition ?? "used");
+      const priceUSD = Math.max(1, Math.round(Number(b.priceUSD) || 1));
+      const description = String(b.description ?? `${title} — verified real by onlist-agent. Condition: ${condition}.`);
+      // the first verified frame becomes the listing photo: save it and serve it
+      // publicly (eBay fetches images by URL)
+      let imageUrl = "https://raw.githubusercontent.com/itsbigdill/onlist-agent/main/bench/cases/catalog-iphone/1.jpg";
+      const frame = typeof b.frame === "string" ? b.frame.match(/^data:image\/(\w+);base64,(.+)$/) : null;
+      const RUNS = process.env.RUNS_DIR ?? (process.env.FC_FUNC_CODE_PATH ? "/tmp/runs" : "runs");
+      if (frame) {
+        const fname = `f-${Date.now().toString(36)}.${frame[1] === "png" ? "png" : "jpg"}`;
+        mkdirSync(`${RUNS}/frames`, { recursive: true });
+        writeFileSync(`${RUNS}/frames/${fname}`, Buffer.from(frame[2], "base64"));
+        const base = process.env.PUBLIC_BASE_URL ?? `https://${req.headers.host ?? "agent.onlist.ai"}`;
+        imageUrl = `${base}/frame/${fname}`;
+      }
+      // the demo board records the listing regardless of eBay
+      const board = localBoard();
+      const item = board.add
+        ? await board.add({ title, status: "selling", priceUSD, condition,
+                            verifiedAt: new Date().toISOString(), note: null, claims: [] })
+        : null;
+      if (!ebayEnabled()) {
+        return json(res, 200, { board: item?.id ?? null, ebay: null });
+      }
+      try {
+        const listing = await publishToEbay({ title, description, condition, priceUSD, imageUrl });
+        if (item) await board.update(item.id, { note: `ebay:${listing.listingId}` });
+        return json(res, 200, { board: item?.id ?? null, ebay: listing });
+      } catch (e) {
+        // eBay hiccup must not kill the flight — the board listing stands
+        return json(res, 200, { board: item?.id ?? null, ebay: null,
+                                ebayError: String((e as Error).message).slice(0, 200) });
+      }
+    }
+    if (req.method === "GET" && req.url && req.url.startsWith("/frame/")) {
+      const name = req.url.slice("/frame/".length).replace(/[^A-Za-z0-9.-]/g, "");
+      const RUNS = process.env.RUNS_DIR ?? (process.env.FC_FUNC_CODE_PATH ? "/tmp/runs" : "runs");
+      const path = `${RUNS}/frames/${name}`;
+      if (!existsSyncFs(path)) return json(res, 404, { error: "no frame" });
+      res.writeHead(200, { "Content-Type": name.endsWith(".png") ? "image/png" : "image/jpeg" });
+      res.end(readFileSyncFs(path));
+      return;
     }
     if (req.url === "/digest" && (req.method === "GET" || req.method === "POST")) {
       const digest = await weeklyDigest(localBoard());

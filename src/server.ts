@@ -51,35 +51,30 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #qr { display: none; flex-direction: column; gap: 30px; align-items: center; text-align: center;
         padding-top: 6px; }
   .tagwrap { position: relative; padding-top: 64px;
-             transform-origin: 50% 0; animation: swing 3.6s ease-in-out infinite alternate; }
-  @keyframes swing { from { transform: rotate(-3.2deg); } to { transform: rotate(3.2deg); } }
+             transform-origin: 50% 0; animation: swing 7s ease-in-out infinite alternate; }
+  @keyframes swing { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
   .tagwrap::before { content: ""; position: absolute; top: 0; left: 50%; width: 2.5px; height: 78px;
              transform: translateX(-50%);
              background: linear-gradient(rgba(31,41,55,.0), rgba(31,41,55,.35)); }
   .tag { position: relative; background: rgba(255,255,255,.78);
          -webkit-backdrop-filter: blur(26px) saturate(1.6); backdrop-filter: blur(26px) saturate(1.6);
          border: 1px solid rgba(255,255,255,.85); border-radius: 26px;
-         padding: 40px 30px 24px; box-shadow: 0 26px 60px rgba(80,70,160,.20); }
-  .taghole { position: absolute; top: 13px; left: 50%; transform: translateX(-50%);
-             width: 15px; height: 15px; border-radius: 50%;
+         padding: 56px 44px 34px; box-shadow: 0 30px 70px rgba(80,70,160,.18); }
+  .taghole { position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+             width: 16px; height: 16px; border-radius: 50%;
              background: #EFEDE8; border: 4.5px solid rgba(31,41,55,.16);
              box-shadow: inset 0 1px 2px rgba(31,41,55,.18); }
   #qr img { border-radius: 14px; display: block; }
-  .tagtitle { margin-top: 18px; padding-top: 16px; border-top: 2px dashed rgba(31,41,55,.14);
-              font-size: 25px; font-weight: 900; letter-spacing: .1em;
+  .tagtitle { margin-top: 26px; padding-top: 22px; border-top: 1.5px dashed rgba(31,41,55,.10);
+              font-size: 30px; font-weight: 900; letter-spacing: .12em;
               background: linear-gradient(95deg, #4F46E5, #9333EA 60%, #DD7A51);
               -webkit-background-clip: text; background-clip: text; color: transparent; }
-  /* powered-by: logo badges, gently floating */
-  .powered { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 600;
-             color: rgba(31,41,55,.55); }
-  .powered .brand { display: inline-flex; align-items: center; gap: 6px; font-weight: 800;
-             color: rgba(31,41,55,.8); background: rgba(255,255,255,.6);
-             -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-             border: 1px solid rgba(255,255,255,.8); border-radius: 999px; padding: 7px 14px;
-             animation: bob 3s ease-in-out infinite alternate; }
-  .powered .brand:last-child { animation-delay: 1.5s; }
-  @keyframes bob { from { transform: translateY(-2px); } to { transform: translateY(2.5px); } }
-  .powered svg { width: 17px; height: 17px; }
+  /* powered-by: one quiet line */
+  .powered { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600;
+             color: rgba(31,41,55,.42); opacity: .9; }
+  .powered .brand { display: inline-flex; align-items: center; gap: 5px; font-weight: 700;
+             color: rgba(31,41,55,.6); }
+  .powered svg { width: 14px; height: 14px; }
 
   /* phone: one shoot zone */
   #app { display: none; }
@@ -240,12 +235,11 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   <div class="tagwrap">
     <div class="tag">
       <span class="taghole"></span>
-      <img id="qrimg" width="210" height="210" alt="QR">
+      <img id="qrimg" width="280" height="280" alt="QR">
       <div class="tagtitle">SCAN TO SELL</div>
     </div>
   </div>
-  <div class="powered">powered by
-    <span class="brand"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="qg" x1="0" y1="0" x2="24" y2="24"><stop offset="0" stop-color="#4F46E5"/><stop offset=".6" stop-color="#9333EA"/><stop offset="1" stop-color="#C084FC"/></linearGradient></defs><path fill="url(#qg)" d="M12 1.6l2.5 5.3 5.3 2.5-5.3 2.5L12 17.2l-2.5-5.3-5.3-2.5 5.3-2.5z"/><path fill="url(#qg)" opacity=".75" d="M18.6 15.2l1.2 2.6 2.6 1.2-2.6 1.2-1.2 2.6-1.2-2.6-2.6-1.2 2.6-1.2z"/></svg>Qwen</span>
+  <div class="powered">powered by <span class="brand"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="qg" x1="0" y1="0" x2="24" y2="24"><stop offset="0" stop-color="#4F46E5"/><stop offset=".6" stop-color="#9333EA"/><stop offset="1" stop-color="#C084FC"/></linearGradient></defs><path fill="url(#qg)" d="M12 1.6l2.5 5.3 5.3 2.5-5.3 2.5L12 17.2l-2.5-5.3-5.3-2.5 5.3-2.5z"/><path fill="url(#qg)" opacity=".75" d="M18.6 15.2l1.2 2.6 2.6 1.2-2.6 1.2-1.2 2.6-1.2-2.6-2.6-1.2 2.6-1.2z"/></svg>Qwen</span>
     <span class="brand"><svg viewBox="0 0 24 24" fill="none"><path d="M8.6 4.5H4.9A2.9 2.9 0 0 0 2 7.4v9.2a2.9 2.9 0 0 0 2.9 2.9h3.7l-1.5-2.3-3-.9 3-.9V8.6l-3-.9 3-.9zM15.4 4.5h3.7A2.9 2.9 0 0 1 22 7.4v9.2a2.9 2.9 0 0 1-2.9 2.9h-3.7l1.5-2.3 3-.9-3-.9V8.6l3-.9-3-.9z" fill="#FF6A00"/><rect x="9" y="11.1" width="6" height="1.8" rx=".9" fill="#FF6A00"/></svg>Alibaba Cloud</span>
   </div>
 </div>

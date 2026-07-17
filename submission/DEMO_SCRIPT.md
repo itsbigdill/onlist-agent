@@ -30,11 +30,12 @@ Setup before recording:
 > decision."
 - Tap **Sell it for me →** and DON'T touch the phone. The timeline checks
   itself off on camera:
-  - ✓ Listed — live at $650
+  - ✓ Listed — **live on eBay sandbox · #110…** (a real listing id)
   - ✓ 3 buyers handled · 1 countered in-range
   - ✓ **SOLD to Alex for $650**
 - The sold screen appears with the shipping label.
-> "While I did nothing: it listed, declined the 'certified check' scammer FOR
+> "While I did nothing: it created a real eBay listing — that number is a
+> live listing id from eBay's Inventory API, not a mock — declined the 'certified check' scammer FOR
 > me, countered the lowballer at $575 — never below my range, which is
 > enforced in code, not in a prompt — and closed with the real buyer. And the
 > prepaid shipping label? Already in my email. My next touch is a box."

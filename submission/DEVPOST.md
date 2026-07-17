@@ -15,9 +15,10 @@ by email. It also refuses to fly fakes.
 ## Elevator pitch (the "what")
 Point your phone at anything you want to sell. The agent proves it's real,
 sizes the live market, and makes you an offer: *"this sells for $520–650."*
-One tap — your only decision — delegates the rest: it lists the item, screens
-the buyers, declines the scams, counters the lowballs strictly inside your
-authorized range, and closes the deal. The prepaid shipping label lands in
+One tap — your only decision — delegates the rest: it creates a **real eBay
+listing** (Sandbox, via the Inventory API — you get the listing id back),
+screens the buyers, declines the scams, counters the lowballs strictly inside
+your authorized range, and closes the deal. The prepaid shipping label lands in
 your email; your next touch is sticking it on a box. Under the hood there's a
 gate that makes the autopilot trustworthy: it refuses to list anything it
 can't prove is a real physical object — no screenshots, no re-shot catalog
@@ -48,6 +49,10 @@ of a real physical object in your hands.
   patterns flagged (overpayment, shipping-agent, gift cards), replies drafted.
   Lowballs get a counter-offer **bounded by the floor in code** — never below
   it, never revealing it, never for scam-flagged claims.
+- **Lists for real.** One tap creates an actual eBay Sandbox listing through
+  the Inventory API: OAuth as the seller, taxonomy suggests the category,
+  required item specifics are auto-filled, and the listing id comes back into
+  the UI. Not a mock — an id you can open.
 - **Works while you don't.** A weekly housekeeper pass (FC Timer → `/digest`)
   surfaces stale listings, price cuts, and unanswered buyers as one
   actionable push.
@@ -94,6 +99,7 @@ onlist app already captures it); negotiation memory across a buyer's messages.
 ## Built with
 qwen3.7-plus (VL + search) · qwen3.6-flash · qwen3.7-max · Alibaba Cloud
 Model Studio (DashScope intl) · Function Compute · OSS · TypeScript/Node ·
+eBay Sandbox (Inventory + Account + Taxonomy APIs) ·
 zero runtime dependencies
 
 ## Links (fill in)

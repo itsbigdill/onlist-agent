@@ -47,6 +47,7 @@ async function api(method: string, path: string, body?: unknown): Promise<{ stat
       Authorization: `Bearer ${await token()}`,
       "Content-Type": "application/json",
       "Content-Language": "en-US",
+      "Accept-Language": "en-US", // sandbox rejects the request without it (25709)
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -62,6 +63,15 @@ let _plumbed: { fulfillment: string; payment: string; ret: string } | null = nul
 
 async function ensurePlumbing(): Promise<NonNullable<typeof _plumbed>> {
   if (_plumbed) return _plumbed;
+
+  // the sandbox seller must be opted into Business Policies before any policy
+  // can be created ("The seller is not BP opted in") — idempotent, ignore dup
+  const opt = await api("POST", "/sell/account/v1/program/opt_in",
+    { programType: "SELLING_POLICY_MANAGEMENT" });
+  // 409 = already opted in (sandbox answers a duplicate with errorId 25804)
+  if (opt.status >= 300 && opt.status !== 409) {
+    console.warn("ebay BP opt-in:", JSON.stringify(opt.data).slice(0, 150));
+  }
 
   // inventory location
   const loc = await api("GET", `/sell/inventory/v1/location/${LOCATION_KEY}`);
@@ -108,14 +118,62 @@ async function ensurePlumbing(): Promise<NonNullable<typeof _plumbed>> {
   return _plumbed;
 }
 
+// Taxonomy needs the base api_scope, which the user token doesn't carry —
+// use a client-credentials app token for it (cached separately).
+let _appToken: { value: string; exp: number } | null = null;
+
+async function appToken(): Promise<string> {
+  if (_appToken && Date.now() < _appToken.exp - 60_000) return _appToken.value;
+  const basic = Buffer.from(`${process.env.EBAY_CLIENT_ID}:${process.env.EBAY_CLIENT_SECRET}`).toString("base64");
+  const res = await fetch(AUTH, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: `Basic ${basic}` },
+    body: new URLSearchParams({ grant_type: "client_credentials", scope: "https://api.ebay.com/oauth/api_scope" }),
+  });
+  if (!res.ok) throw new Error(`ebay app oauth ${res.status}`);
+  const d = await res.json() as { access_token: string; expires_in: number };
+  _appToken = { value: d.access_token, exp: Date.now() + d.expires_in * 1000 };
+  return _appToken.value;
+}
+
 async function categoryFor(title: string): Promise<string> {
   try {
-    const r = await api("GET",
-      `/commerce/taxonomy/v1/category_tree/0/get_category_suggestions?q=${encodeURIComponent(title)}`);
-    const leaf = r.data?.categorySuggestions?.[0]?.category?.categoryId;
+    const r = await fetch(
+      `${BASE}/commerce/taxonomy/v1/category_tree/0/get_category_suggestions?q=${encodeURIComponent(title)}`,
+      { headers: { Authorization: `Bearer ${await appToken()}`, "Accept-Language": "en-US" } });
+    const d: any = await r.json();
+    const leaf = d?.categorySuggestions?.[0]?.category?.categoryId;
     if (leaf) return String(leaf);
   } catch { /* fall through */ }
-  return "182094"; // Everything Else > Other — safe leaf fallback
+  return "31388"; // Digital Cameras — a known sandbox leaf, safe fallback
+}
+
+// Required item specifics ("aspects") vary per category — error 25002 if
+// missing. Pull the category's required aspects and fill each one: a value
+// matched from the title when the aspect has a closed value set, the leading
+// brand-looking word for Brand, honest "Does Not Apply" otherwise.
+async function aspectsFor(categoryId: string, title: string): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {};
+  try {
+    const r = await fetch(
+      `${BASE}/commerce/taxonomy/v1/category_tree/0/get_item_aspects_for_category?category_id=${categoryId}`,
+      { headers: { Authorization: `Bearer ${await appToken()}`, "Accept-Language": "en-US" } });
+    const d: any = await r.json();
+    const lowTitle = title.toLowerCase();
+    for (const a of d?.aspects ?? []) {
+      if (!a?.aspectConstraint?.aspectRequired) continue;
+      const name = a.localizedAspectName as string;
+      const values = (a.aspectValues ?? []).map((v: any) => String(v.localizedValue));
+      const hit = values.find((v: string) => lowTitle.includes(v.toLowerCase()));
+      if (hit) { out[name] = [hit]; continue; }
+      if (/^brand$/i.test(name)) {
+        const lead = title.match(/^[A-Z][A-Za-z0-9-]*/);
+        out[name] = [lead ? lead[0] : "Unbranded"];
+      } else if (values.length) out[name] = [values[0]];
+      else out[name] = ["Does Not Apply"];
+    }
+  } catch { /* no aspects — let eBay judge */ }
+  return out;
 }
 
 export interface EbayListing { listingId: string; url: string; categoryId: string }
@@ -128,8 +186,13 @@ export async function publishToEbay(opts: {
   const plumbing = await ensurePlumbing();
   const sku = `onlist-${Date.now().toString(36)}`;
 
-  // condition text → eBay enum (used goods demo: keep it simple and honest)
-  const cond = /new/i.test(opts.condition) ? "NEW" : "USED_GOOD";
+  // condition text → eBay enum. USED_EXCELLENT = conditionId 3000 ("Used"),
+  // the only used condition the fallback category accepts (USED_GOOD=4000 is
+  // rejected there with error 25021)
+  const cond = /new/i.test(opts.condition) ? "NEW" : "USED_EXCELLENT";
+
+  const categoryId = await categoryFor(opts.title);
+  const aspects = await aspectsFor(categoryId, opts.title);
 
   const inv = await api("PUT", `/sell/inventory/v1/inventory_item/${sku}`, {
     availability: { shipToLocationAvailability: { quantity: 1 } },
@@ -138,11 +201,10 @@ export async function publishToEbay(opts: {
       title: opts.title.slice(0, 80),
       description: opts.description.slice(0, 4000),
       imageUrls: [opts.imageUrl],
+      ...(Object.keys(aspects).length ? { aspects } : {}),
     },
   });
   if (inv.status >= 300) throw new Error(`ebay inventory: ${JSON.stringify(inv.data).slice(0, 250)}`);
-
-  const categoryId = await categoryFor(opts.title);
   const offer = await api("POST", "/sell/inventory/v1/offer", {
     sku, marketplaceId: MARKETPLACE, format: "FIXED_PRICE",
     availableQuantity: 1, categoryId,

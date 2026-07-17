@@ -20,9 +20,10 @@ that gate below).
 2. Photograph any object near you, two angles. The agent verifies it's real,
    sizes the market, and makes you an offer: **"this sells for $X–Y"**.
 3. Tap *Sell it for me* — your one decision — and watch the autopilot fly:
-   listed, buyers screened (scam declined for you, lowball countered inside
-   your range), **sold** — and the prepaid shipping label is in your email.
-   Your next touch is sticking it on a box.
+   **listed for real on eBay Sandbox** (a live listing id, created through
+   eBay's Inventory API), buyers screened (scam declined for you, lowball
+   countered inside your range), **sold** — and the prepaid shipping label is
+   in your email. Your next touch is sticking it on a box.
 4. If the agent isn't sure mid-flight it doesn't guess — it tells you exactly
    which extra angle to shoot and re-examines.
 5. Now try to fool it: photograph a product photo **on your monitor**.
@@ -46,8 +47,10 @@ frames from a live capture pass
 │ "sells for $X–Y"         │   a sale RANGE. 🧑 One tap authorizes it —
 └──────────┬───────────────┘   the only human decision in the flow.
            ▼
-┌─ LIST ───────────────────┐   Status flips to selling on the board.
-└──────────┬───────────────┘
+┌─ LIST ───────────────────┐   A REAL eBay Sandbox listing via the Inventory
+│ eBay Sandbox · Inventory │   API — taxonomy picks the category, required
+│ API → live listing id    │   item specifics are auto-filled, and the agent
+└──────────┬───────────────┘   gets a live listing id back.
            ▼
 ┌─ TRIAGE → CLOSE ─────────┐   Claims ranked, scams declined, lowballs
 │ rank · counter · close   │   countered — all inside the authorized range,
@@ -157,6 +160,7 @@ src/triage.ts      buyer triage + code-bounded counter-offers
 src/evidence.ts    OSS evidence locker (zero-dep signing, env-gated)
 src/digest.ts      weekly housekeeper
 src/agent.ts       the autopilot orchestration
+src/ebay.ts        eBay Sandbox publisher: OAuth, taxonomy, aspects, publish
 src/board/local.ts self-contained demo board (JSON file)
 src/board/onlist.ts live adapter to onlist.ai
 src/cli.ts         smoke | demo | digest

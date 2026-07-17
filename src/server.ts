@@ -83,14 +83,15 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   /* phone: one shoot zone */
   #app { display: none; }
   #shoot { display: flex; flex-direction: column; align-items: center; justify-content: center;
-           gap: 14px; width: 100%; min-height: 300px; cursor: pointer; padding: 26px 20px;
-           background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.75);
-           -webkit-backdrop-filter: blur(26px) saturate(1.6); backdrop-filter: blur(26px) saturate(1.6);
-           border-radius: 28px;
-           box-shadow: 0 18px 44px rgba(80,70,160,.10); }
+           gap: 26px; width: 100%; min-height: 66vh; cursor: pointer; padding: 10px 0; }
+  .hintpill { display: inline-flex; align-items: center; gap: 8px;
+              background: rgba(255,255,255,.68); border: 1px solid rgba(255,255,255,.85);
+              -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+              border-radius: 999px; padding: 13px 24px; font: 700 16px -apple-system, system-ui;
+              color: #1F2937; box-shadow: 0 12px 30px rgba(80,70,160,.14); }
   #shoot:active .vf { transform: scale(.97); }
   /* the scanner viewfinder */
-  .vf { position: relative; width: 200px; height: 200px; border-radius: 22px;
+  .vf { position: relative; width: 236px; height: 236px; border-radius: 26px;
         display: flex; align-items: center; justify-content: center;
         background: rgba(124,58,237,.05); overflow: hidden; transition: transform .15s; }
   .vf .cor { position: absolute; width: 30px; height: 30px; border: 3px solid #7C3AED; }
@@ -202,18 +203,65 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .astep .amain { flex: 1; }
   .astep .at { font-weight: 700; font-size: 14.5px; }
   .astep .ad { font-size: 12px; color: rgba(31,41,55,.5); }
-  /* the offer: the one human decision — authorize a sale range */
-  .range { font-size: 48px; font-weight: 800; letter-spacing: -0.03em; margin: 8px 0 2px;
+  /* the flight: every step is a big pill that stays on screen */
+  #auto.panel { background: transparent; border: 0; box-shadow: none;
+                -webkit-backdrop-filter: none; backdrop-filter: none; padding: 6px 0; }
+  .fpill { display: flex; align-items: center; gap: 14px; text-align: left;
+           background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.8);
+           -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+           border-radius: 24px; padding: 19px 19px; margin-top: 14px;
+           box-shadow: 0 14px 34px rgba(80,70,160,.10);
+           opacity: 0; transform: translateY(12px); transition: opacity .45s, transform .45s; }
+  .fpill.in { opacity: 1; transform: none; }
+  .fmain { flex: 1; min-width: 0; }
+  .fbig { font-size: 17.5px; font-weight: 800; }
+  .fsub { font-size: 13px; color: rgba(31,41,55,.5); margin-top: 1px; }
+  .okball, .waitball { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%;
+           display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
+  .okball { background: #DFF2E6; color: #1F9D5B; }
+  .waitball { background: #F3EFFB; color: #7C3AED; }
+  .waitball .spin { width: 16px; height: 16px; border-width: 2.5px; margin: 0; }
+  .ebayw { font-weight: 800; font-size: 24px; letter-spacing: -0.02em; }
+  .ebayw i { font-style: normal; }
+  .ebayw i:nth-child(1) { color: #E53238; } .ebayw i:nth-child(2) { color: #0064D2; }
+  .ebayw i:nth-child(3) { color: #F5AF02; } .ebayw i:nth-child(4) { color: #86B817; }
+  .ebayid { font-size: 17px; font-weight: 800; color: #1F2937; margin-left: 6px; }
+  .cgrid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top: 12px; }
+  .cgrid div { text-align: center; }
+  .cgrid b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+  .cgrid span { font-size: 10px; font-weight: 600; color: rgba(31,41,55,.45);
+                text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
+  .negline { display: flex; align-items: center; gap: 9px; margin-top: 9px; font-size: 14.5px;
+             opacity: 0; transform: translateX(-6px); transition: .35s; }
+  .negline.in { opacity: 1; transform: none; }
+  .negline .nic { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; font-size: 12px;
+                  font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .negline.ok .nic { background: #DFF2E6; color: #1F9D5B; }
+  .negline.no .nic { background: #FBE7DF; color: #C0503C; }
+  .negline.mid .nic { background: #F8EFD8; color: #C98A2B; }
+  .negline .nw { color: rgba(31,41,55,.75); }
+  .soldbig { font-size: 24px; font-weight: 800; margin-top: 12px; }
+  .lblbtns { display: flex; gap: 9px; margin-top: 12px; }
+  .lblbtns button { flex: 1; border: 0; border-radius: 14px; padding: 13px;
+           font: 800 14.5px -apple-system, system-ui; cursor: pointer; }
+  .lblbtns .dl { background: linear-gradient(120deg, #4F46E5, #7C3AED); color: #fff;
+           box-shadow: 0 8px 20px rgba(99,60,237,.3); }
+  .lblbtns .pr { background: rgba(255,255,255,.85); color: #1F2937;
+           border: 1px solid rgba(31,41,55,.12); }
+  /* the offer: the one human decision — no wrapper, just the thing and the number */
+  #offer.panel { background: transparent; border: 0; box-shadow: none;
+                 -webkit-backdrop-filter: none; backdrop-filter: none; padding: 14px 0; }
+  .range { font-size: 58px; font-weight: 800; letter-spacing: -0.03em; margin: 10px 0 4px;
            background: linear-gradient(95deg, #4F46E5, #9333EA 55%, #DD7A51);
            -webkit-background-clip: text; background-clip: text; color: transparent; }
   /* captured frames as a fanned sticker stack — the thing you're selling, front and center */
   .stickfan { display: flex; justify-content: center; align-items: center; margin: 2px 0 12px; }
   .stickfan:empty { display: none; }
-  .stick { width: 92px; height: 92px; object-fit: cover; border-radius: 22px;
+  .stick { width: 108px; height: 108px; object-fit: cover; border-radius: 24px;
            border: 4px solid #fff; box-shadow: 0 12px 26px rgba(80,70,160,.25); }
   .stick.s0 { transform: rotate(-8deg) translateX(12px); }
-  .stick.s1 { transform: rotate(3deg) translateY(-5px); position: relative; z-index: 2;
-              width: 104px; height: 104px; }
+  .stick.s1 { transform: rotate(3deg) translateY(-6px); position: relative; z-index: 2;
+              width: 126px; height: 126px; }
   .stick.s2 { transform: rotate(9deg) translateX(-12px); }
   /* the prize: a ready-to-print shipping label lands in your email */
   .shiplabel { text-align: left; background: #fff; border: 2px dashed rgba(31,41,55,.25);
@@ -257,7 +305,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
       <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
       <div id="slots"></div>
     </div>
-    <b id="shootLabel">Scan to sell →</b>
+    <div class="hintpill" id="shootLabel">📷 Scan your item</div>
     <small id="shootHint"></small>
   </label>
 
@@ -285,27 +333,11 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   </div>
 
   <div id="auto" class="panel">
-    <h3>Autopilot engaged — hands off</h3>
-    <div class="astep" id="as1"><span class="tick">…</span><div class="amain"><div class="at">Listing</div><div class="ad" id="as1d"></div></div></div>
-    <div class="astep" id="as2"><span class="tick">…</span><div class="amain"><div class="at">Handling buyers</div><div class="ad" id="as2d"></div></div></div>
-    <div class="astep" id="as3"><span class="tick">…</span><div class="amain"><div class="at">Closing the sale</div><div class="ad" id="as3d"></div></div></div>
+    <div id="flight"></div>
+    <div class="demonote" id="fdemo" hidden>demo: buyers &amp; sale are simulated — the eBay listing is real</div>
+    <button id="again3" class="ghostbtn" hidden>Done</button>
   </div>
 
-  <div id="sold" class="panel">
-    <div id="soldTitle" style="font-size:24px;font-weight:800"></div>
-    <div id="soldSub" style="font-size:14px;color:rgba(31,41,55,.55);margin-top:4px"></div>
-    <div class="sect">What the agent did with your buyers</div>
-    <div id="buyers"></div>
-    <div class="shiplabel" id="label" hidden>
-      <div class="to">Prepaid shipping label · ship to</div>
-      <div class="addr" id="shipTo"></div>
-      <div class="barcode"></div>
-    </div>
-    <div class="labelnote" id="labelNote"></div>
-    <div class="demonote">demo board: the sale is simulated with the demo buyers — in production
-      the buyer pays through the marketplace and this label is generated by the carrier</div>
-    <button id="again3" class="ghostbtn" style="margin-top:16px">Done</button>
-  </div>
 </div>
 
 <div class="foot"><a href="https://www.qwencloud.com">Powered by Qwen on Alibaba Cloud</a></div>
@@ -348,7 +380,7 @@ function renderShoot() {
   $("slots").innerHTML = slots;
   if (frames.length === 0) {
     $("shootIcon").style.display = ""; $("shootLabel").style.display = "";
-    $("shootLabel").textContent = "Scan to sell →"; $("shootHint").textContent = "";
+    $("shootLabel").textContent = "📷 Scan your item"; $("shootHint").textContent = "";
   } else if (frames.length === 1) {
     $("shootIcon").style.display = "none"; $("shootLabel").style.display = "none";
     $("shootHint").textContent = "1 more photo required";
@@ -357,7 +389,7 @@ function renderShoot() {
 function chip(text, cls) { return '<span class="' + cls + '">' + text + '</span>'; }
 function esc(s) { return String(s).replace(/[<>&]/g, function (c) { return { "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]; }); }
 function panel(id, label) {
-  ["shoot", "res", "offer", "auto", "sold"].forEach(function (p) { $(p).style.display = "none"; });
+  ["shoot", "res", "offer", "auto"].forEach(function (p) { $(p).style.display = "none"; });
   $("busy").style.display = id === "busy" ? "block" : "none";
   if (id === "busy") { $("busyLabel").textContent = label; return; }
   $(id).style.display = id === "shoot" ? "flex" : "block";
@@ -427,11 +459,24 @@ function verify() {
 // ————— THE AUTOPILOT: verified → priced → listed → buyers screened, hands-free.
 // The human authorizes a sale RANGE once; the agent flies the rest —
 // list, negotiate inside the range, close. Next human touch: the shipping label.
-function step(id, state, detail) {
-  var el = $(id);
-  el.className = "astep " + state;
-  el.querySelector(".tick").textContent = state === "working" ? "…" : "✓";
-  if (detail != null) $(id + "d").textContent = detail;
+// One flight, every step stays on screen as a big pill.
+function addPill(html) {
+  var el = document.createElement("div");
+  el.className = "fpill"; el.innerHTML = html;
+  $("flight").appendChild(el);
+  setTimeout(function () { el.className = "fpill in"; }, 30);
+  return el;
+}
+function ball(ok) {
+  return ok ? '<div class="okball">✓</div>' : '<div class="waitball"><div class="spin"></div></div>';
+}
+function countUp(el, to, ms) {
+  var steps = Math.max(1, Math.round(ms / 60)), i = 0;
+  var iv = setInterval(function () {
+    i++;
+    el.textContent = Math.round(to * i / steps);
+    if (i >= steps) clearInterval(iv);
+  }, 60);
 }
 // ————— Step 1 of the human's ONE decision: the offer. The agent sizes the
 // market and shows the sale RANGE it wants authority over. One tap delegates it.
@@ -469,47 +514,160 @@ function runAutopilot(v) {
 // inside the authorized range. The human's next touch is sticking a label on a box.
 function engage(v, p) {
   panel("auto");
-  step("as1", "on working", "publishing…");
+  $("flight").innerHTML = ""; $("fdemo").hidden = true; $("again3").hidden = true;
+  var pub = addPill(ball(false) +
+    '<div class="fmain"><div class="fbig">Publishing…</div><div class="fsub">creating the listing</div></div>');
   fetch("/list", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title: v.itemName || "item", condition: v.condition || "used",
                            priceUSD: p.suggestedUSD, frame: frames[0] || null }),
   }).then(function (r) { return r.json(); }).then(function (li) {
     lastListing = li;
-    if (li.ebay) step("as1", "on", "live on eBay sandbox · #" + li.ebay.listingId);
-    else step("as1", "on", "live on the board at $" + p.suggestedUSD);
-    step("as2", "on working", "ranking claims, drafting replies, countering…");
-    fetch("/triage", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: v.itemName || "item", priceUSD: p.suggestedUSD,
-                             floorUSD: p.floorUSD, claims: DEMO_BUYERS }),
-    }).then(function (r) { return r.json(); }).then(function (tg) {
-      var ranked = (tg && tg.ranked) || [];
-      var counters = ranked.filter(function (b) { return b.counterUSD; }).length;
-      step("as2", "on", ranked.length + " screened" + (counters ? " · " + counters + " countered in-range" : ""));
-      var top = ranked[0];
-      var sellable = top && top.score >= 70;
-      step("as3", "on working", "");
-      setTimeout(function () {
-        if (sellable) {
-          var who = (DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {}).name || "buyer";
-          step("as3", "on", "SOLD to " + who + " for $" + p.suggestedUSD);
-        } else {
-          step("as3", "on", "no clean buyer yet — negotiating inside your range");
-        }
-        setTimeout(function () { showSold(v, p, tg, sellable); }, 800);
-      }, 900);
-    }).catch(function () {
-      step("as2", "on", "screening hiccup — buyers arrive later");
-      step("as3", "on", "listed — the agent keeps working");
-      setTimeout(function () { showSold(v, p, null, false); }, 800);
-    });
+    if (li.ebay) {
+      pub.innerHTML = ball(true) +
+        '<div class="fmain"><div class="fbig"><span class="ebayw"><i>e</i><i>b</i><i>a</i><i>y</i></span>' +
+        '<span class="ebayid">#' + li.ebay.listingId + '</span></div>' +
+        '<div class="fsub"><a href="' + li.ebay.url + '" target="_blank" style="color:inherit;font-weight:700">published ✓ · view listing</a></div></div>';
+    } else {
+      pub.innerHTML = ball(true) +
+        '<div class="fmain"><div class="fbig">Listed — $' + p.suggestedUSD + '</div>' +
+        '<div class="fsub">live on the board</div></div>';
+    }
+    flyBuyers(v, p);
   }).catch(function () {
-    step("as1", "on", "live on the board at $" + p.suggestedUSD);
-    step("as2", "on", "screening skipped");
-    step("as3", "on", "listed — the agent keeps working");
-    setTimeout(function () { showSold(v, p, null, false); }, 800);
+    pub.innerHTML = ball(true) +
+      '<div class="fmain"><div class="fbig">Listed — $' + p.suggestedUSD + '</div><div class="fsub">live on the board</div></div>';
+    flyBuyers(v, p);
   });
+}
+
+function isScamB(b) {
+  return b.score <= 15 || (b.flags || []).some(function (f) { return /scam|overpay|shipping|check|fraud/i.test(f); });
+}
+function nameOfB(b) {
+  return (DEMO_BUYERS.filter(function (d) { return d.id === b.id; })[0] || {}).name || b.id;
+}
+
+function flyBuyers(v, p) {
+  var bp = addPill(ball(false) +
+    '<div class="fmain"><div class="fbig">Finding buyers…</div>' +
+    '<div class="cgrid"><div><b id="cAll">0</b><span>inquiries</span></div>' +
+    '<div><b id="cSpam">0</b><span>spam ✕</span></div>' +
+    '<div><b id="cLow">0</b><span>countered</span></div>' +
+    '<div><b id="cOk">0</b><span>in range</span></div></div></div>');
+  fetch("/triage", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: v.itemName || "item", priceUSD: p.suggestedUSD,
+                           floorUSD: p.floorUSD, claims: DEMO_BUYERS }),
+  }).then(function (r) { return r.json(); }).then(function (tg) {
+    var ranked = (tg && tg.ranked) || [];
+    var nSpam = ranked.filter(isScamB).length;
+    var nLow = ranked.filter(function (b) { return !isScamB(b) && b.counterUSD; }).length;
+    var nOk = ranked.filter(function (b) { return b.score >= 70; }).length;
+    countUp(bp.querySelector("#cAll"), ranked.length, 900);
+    setTimeout(function () { countUp(bp.querySelector("#cSpam"), nSpam, 600); }, 500);
+    setTimeout(function () { countUp(bp.querySelector("#cLow"), nLow, 600); }, 900);
+    setTimeout(function () { countUp(bp.querySelector("#cOk"), nOk, 600); }, 1300);
+    setTimeout(function () {
+      bp.querySelector(".waitball").outerHTML = ball(true);
+      bp.querySelector(".fbig").textContent = ranked.length + " buyers screened";
+      flyDeal(v, p, tg, ranked);
+    }, 2000);
+  }).catch(function () {
+    bp.innerHTML = ball(true) +
+      '<div class="fmain"><div class="fbig">Buyers arrive later</div><div class="fsub">screening hiccup — the agent keeps watching</div></div>';
+    flyShip(v, p, null, false);
+  });
+}
+
+function flyDeal(v, p, tg, ranked) {
+  var dp = addPill(ball(false) +
+    '<div class="fmain"><div class="fbig">Negotiating…</div><div id="negs"></div></div>');
+  var negs = dp.querySelector("#negs");
+  var lines = ranked.slice().reverse().map(function (b) {
+    if (isScamB(b)) return { cls: "no", ic: "✕", w: esc(nameOfB(b)) + " — declined (scam)" };
+    if (b.counterUSD) return { cls: "mid", ic: "~", w: esc(nameOfB(b)) + " → countered $" + b.counterUSD };
+    if (b.score >= 70) return { cls: "ok", ic: "✓", w: esc(nameOfB(b)) + " — accepted $" + p.suggestedUSD };
+    return { cls: "mid", ic: "~", w: esc(nameOfB(b)) + " — negotiating" };
+  });
+  lines.forEach(function (l, i) {
+    setTimeout(function () {
+      var el = document.createElement("div");
+      el.className = "negline " + l.cls;
+      el.innerHTML = '<span class="nic">' + l.ic + '</span><span class="nw">' + l.w + '</span>';
+      negs.appendChild(el);
+      setTimeout(function () { el.className += " in"; }, 30);
+    }, 600 * (i + 1));
+  });
+  var top = ranked[0];
+  var sellable = top && top.score >= 70;
+  setTimeout(function () {
+    dp.querySelector(".waitball").outerHTML = ball(true);
+    if (sellable) {
+      dp.querySelector(".fbig").textContent = "Deal closed";
+      var sb = document.createElement("div");
+      sb.className = "soldbig";
+      sb.textContent = "SOLD · $" + p.suggestedUSD + " → " + nameOfB(top);
+      dp.querySelector(".fmain").appendChild(sb);
+    } else {
+      dp.querySelector(".fbig").textContent = "Live — negotiating inside your range";
+    }
+    flyShip(v, p, tg, sellable);
+  }, 600 * (lines.length + 1) + 500);
+}
+
+function flyShip(v, p, tg, sellable) {
+  if (sellable) {
+    var top = ((tg && tg.ranked) || [])[0] || {};
+    var who = nameOfB(top);
+    var addr = who + " M., 2847 Juniper Lane, Orlando, FL 32803";
+    var sp = addPill(ball(true) +
+      '<div class="fmain"><div class="fbig">Shipping label ready</div>' +
+      '<div class="shiplabel"><div class="to">Prepaid · ship to</div>' +
+      '<div class="addr" id="shipTo"></div><div class="barcode"></div></div>' +
+      '<div class="lblbtns"><button class="dl" id="lblDl">⬇ Download</button>' +
+      '<button class="pr" id="lblPr">🖨 Print</button></div></div>');
+    sp.querySelector("#shipTo").innerHTML = esc(who) + " M.<br>2847 Juniper Lane<br>Orlando, FL 32803";
+    sp.querySelector("#lblDl").onclick = function (e) { e.stopPropagation(); labelPng(addr, v, p, false); };
+    sp.querySelector("#lblPr").onclick = function (e) { e.stopPropagation(); labelPng(addr, v, p, true); };
+  } else {
+    addPill(ball(true) +
+      '<div class="fmain"><div class="fbig">Label on sale</div>' +
+      '<div class="fsub">the moment it sells, the prepaid label lands in your email</div></div>');
+  }
+  $("fdemo").hidden = false;
+  $("again3").hidden = false;
+}
+
+// Render the label as a real PNG: Download saves it, Print opens the dialog.
+function labelPng(addr, v, p, doPrint) {
+  var c = document.createElement("canvas"); c.width = 1000; c.height = 620;
+  var g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, 1000, 620);
+  g.strokeStyle = "#111827"; g.lineWidth = 6; g.strokeRect(20, 20, 960, 580);
+  g.fillStyle = "#111827";
+  g.font = "800 40px -apple-system, system-ui";
+  g.fillText("PREPAID SHIPPING LABEL", 60, 105);
+  g.fillStyle = "#6B7280"; g.font = "600 24px -apple-system, system-ui";
+  g.fillText("USPS PRIORITY - onlist autopilot", 60, 145);
+  g.fillStyle = "#111827"; g.font = "700 32px ui-monospace, Menlo, monospace";
+  addr.split(", ").forEach(function (line, i) { g.fillText(line, 60, 235 + i * 46); });
+  g.font = "600 26px -apple-system, system-ui";
+  g.fillText((v.itemName || "item") + " - $" + p.suggestedUSD, 60, 430);
+  var x = 60;
+  while (x < 940) {
+    var w = 4 + Math.floor(Math.random() * 12);
+    g.fillRect(x, 468, w, 104);
+    x += w + 4 + Math.floor(Math.random() * 10);
+  }
+  var url = c.toDataURL("image/png");
+  if (doPrint) {
+    var w2 = window.open("");
+    if (w2) w2.document.write('<img src="' + url + '" style="width:100%" onload="print()">');
+  } else {
+    var a = document.createElement("a");
+    a.href = url; a.download = "shipping-label.png"; a.click();
+  }
 }
 
 function itemName() { return (verdict && verdict.itemName || "item").trim(); }
@@ -522,46 +680,11 @@ var DEMO_BUYERS = [
   { id: "b3", name: "Rita", message: "Would you take half?" }
 ];
 
-// ————— The prize screen: sold, and the shipping label is already in your inbox.
-function showSold(v, p, tg, sellable) {
-  var ranked = (tg && tg.ranked) || [];
-  function verdictOf(b) {
-    var scam = b.score <= 15 || (b.flags || []).some(function (f) { return /scam|overpay|shipping|check|fraud/i.test(f); });
-    if (scam) return { cls: "bad", ic: "✕", word: "Likely scam — declined for you" };
-    if (b.score >= 70) return { cls: "good", ic: "✓", word: "Solid — deal closed" };
-    if (b.counterUSD) return { cls: "mid", ic: "~", word: "Lowball — countered at $" + b.counterUSD };
-    return { cls: "mid", ic: "~", word: "Lowballing" };
-  }
-  $("buyers").innerHTML = ranked.map(function (b) {
-    var who = (DEMO_BUYERS.filter(function (d) { return d.id === b.id; })[0] || {}).name || b.id;
-    var w = verdictOf(b);
-    return '<div class="buyer ' + w.cls + '"><span class="bic">' + w.ic + '</span>' +
-      '<div class="bmain"><div class="bname">' + esc(who) + '</div>' +
-      '<div class="bword">' + w.word + '</div></div><span class="bscore">' + b.score + '</span></div>';
-  }).join("");
-  var ebayLine = (lastListing && lastListing.ebay)
-    ? ' · <a href="' + lastListing.ebay.url + '" target="_blank" style="color:inherit">eBay #' + lastListing.ebay.listingId + "</a>" : "";
-  if (sellable) {
-    var top = ranked[0];
-    var who = (DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {}).name || "buyer";
-    $("soldTitle").textContent = "Sold — $" + p.suggestedUSD;
-    $("soldSub").innerHTML = esc(v.itemName || "item") + " → " + esc(who) + ebayLine;
-    $("shipTo").innerHTML = esc(who) + " M.<br>2847 Juniper Lane<br>Orlando, FL 32803";
-    $("label").hidden = false;
-    $("labelNote").textContent = "📬 This prepaid label was just emailed to you. Stick it on a box — the courier does the rest.";
-  } else {
-    $("soldTitle").textContent = "Live — $" + p.suggestedUSD;
-    $("soldSub").innerHTML = esc(v.itemName || "item") + " · negotiating inside your range" + ebayLine;
-    $("label").hidden = true;
-    $("labelNote").textContent = "📬 The moment it sells, a prepaid shipping label lands in your email.";
-  }
-  panel("sold");
-}
 
 function reset() {
   frames = []; verdict = null; lastPrice = null; pending = null; lastListing = null;
   $("more").hidden = true;
-  ["as1", "as2", "as3"].forEach(function (s) { step(s, "", ""); });
+  $("flight").innerHTML = "";
   renderShoot();
   panel("shoot");
 }
@@ -581,6 +704,9 @@ if (isDesktop) {
   $("qrimg").src = "https://api.qrserver.com/v1/create-qr-code/?size=480x480&data=" + encodeURIComponent(target);
 } else {
   $("app").style.display = "block";
+  // fire the camera immediately — one less tap; browsers that demand a
+  // gesture just fall back to the full-screen tap zone
+  setTimeout(function () { try { $("cap").click(); } catch (e) {} }, 400);
 }
 </script>`;
 

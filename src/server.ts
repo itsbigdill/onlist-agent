@@ -57,16 +57,32 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   /* phone: one shoot zone */
   #app { display: none; }
   #shoot { display: flex; flex-direction: column; align-items: center; justify-content: center;
-           gap: 8px; width: 100%; min-height: 240px; cursor: pointer;
-           background: rgba(255,255,255,.55); border: 2px dashed rgba(255,255,255,.9);
+           gap: 14px; width: 100%; min-height: 300px; cursor: pointer; padding: 26px 20px;
+           background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.75);
            -webkit-backdrop-filter: blur(26px) saturate(1.6); backdrop-filter: blur(26px) saturate(1.6);
            border-radius: 28px;
-           box-shadow: 0 18px 44px rgba(80,70,160,.10); transition: border-color .2s; }
-  #shoot:active { border-color: #DD7A51; }
-  #shoot svg { width: 40px; height: 40px; color: #DD7A51; }
-  #shoot b { font-size: 18px; }
+           box-shadow: 0 18px 44px rgba(80,70,160,.10); }
+  #shoot:active .vf { transform: scale(.97); }
+  /* the scanner viewfinder */
+  .vf { position: relative; width: 200px; height: 200px; border-radius: 22px;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(124,58,237,.05); overflow: hidden; transition: transform .15s; }
+  .vf .cor { position: absolute; width: 30px; height: 30px; border: 3px solid #7C3AED; }
+  .vf .c1 { top: 10px; left: 10px; border-right: 0; border-bottom: 0; border-radius: 10px 0 0 0; }
+  .vf .c2 { top: 10px; right: 10px; border-left: 0; border-bottom: 0; border-radius: 0 10px 0 0; }
+  .vf .c3 { bottom: 10px; left: 10px; border-right: 0; border-top: 0; border-radius: 0 0 0 10px; }
+  .vf .c4 { bottom: 10px; right: 10px; border-left: 0; border-top: 0; border-radius: 0 0 10px 0; }
+  .scanline { position: absolute; left: 14%; right: 14%; height: 3px; border-radius: 3px;
+              background: linear-gradient(90deg, transparent, #8B5CF6 30%, #C084FC 70%, transparent);
+              box-shadow: 0 0 14px 3px rgba(139,92,246,.45);
+              animation: scan 2.4s ease-in-out infinite alternate; }
+  @keyframes scan { from { top: 14%; } to { top: 84%; } }
+  #shoot svg { width: 44px; height: 44px; color: #7C3AED; opacity: .85; }
+  #shoot b { font-size: 21px; font-weight: 800; letter-spacing: -0.01em;
+             background: linear-gradient(95deg, #4F46E5, #9333EA 60%, #DD7A51);
+             -webkit-background-clip: text; background-clip: text; color: transparent; }
   #shoot small { color: rgba(31,41,55,.5); }
-  #slots { display: flex; gap: 12px; justify-content: center; margin-top: 4px; }
+  #slots { display: flex; gap: 10px; justify-content: center; }
   #slots:empty { display: none; }
   #slots .slot { width: 66px; height: 66px; border-radius: 14px; }
   #slots .slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
@@ -201,9 +217,13 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
 <div id="app">
   <label id="shoot">
     <input id="cap" type="file" accept="image/*" capture="environment" hidden>
-    <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
-    <b id="shootLabel">Photograph your item</b>
-    <div id="slots"></div>
+    <div class="vf">
+      <span class="cor c1"></span><span class="cor c2"></span><span class="cor c3"></span><span class="cor c4"></span>
+      <div class="scanline"></div>
+      <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
+      <div id="slots"></div>
+    </div>
+    <b id="shootLabel">Scan to sell →</b>
     <small id="shootHint"></small>
   </label>
 
@@ -294,7 +314,7 @@ function renderShoot() {
   $("slots").innerHTML = slots;
   if (frames.length === 0) {
     $("shootIcon").style.display = ""; $("shootLabel").style.display = "";
-    $("shootLabel").textContent = "Photograph your item"; $("shootHint").textContent = "";
+    $("shootLabel").textContent = "Scan to sell →"; $("shootHint").textContent = "";
   } else if (frames.length === 1) {
     $("shootIcon").style.display = "none"; $("shootLabel").style.display = "none";
     $("shootHint").textContent = "1 more photo required";

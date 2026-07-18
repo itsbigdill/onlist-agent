@@ -101,7 +101,15 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #scanCta { font-size: 19px; font-weight: 800; letter-spacing: -0.01em;
         background: linear-gradient(120deg,#4F46E5,#9333EA);
         -webkit-background-clip: text; background-clip: text; color: transparent; }
-  #slots { position: absolute; bottom: 10px; left: 0; right: 0; z-index: 2; }
+  #scanwrap { display: flex; gap: 12px; align-items: center; justify-content: center; }
+  .gotframe { width: 156px; height: 156px; border-radius: 26px; object-fit: cover;
+        border: 3px solid transparent;
+        background: linear-gradient(#fff,#fff) padding-box,
+                    linear-gradient(130deg,#4F46E5,#A855F7) border-box;
+        box-shadow: 0 14px 30px rgba(80,70,160,.16); }
+  #shoot.multi .scanbtn { width: 156px; height: 156px; border-radius: 26px; }
+  #shoot.multi3 .scanbtn, #shoot.multi3 .gotframe { width: 104px; height: 104px; border-radius: 20px; }
+  #shoot.multi #scanCta, #shoot.multi3 #scanCta { display: none; }
   #shutter { width: 68px; height: 68px; border-radius: 50%; cursor: pointer;
         background: linear-gradient(#fff,#fff) padding-box,
                     linear-gradient(130deg,#4F46E5,#A855F7) border-box;
@@ -344,11 +352,12 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
 <div id="app">
   <div id="shoot">
     <input id="cap" type="file" accept="image/*" capture="environment" hidden>
-    <div class="scanbtn" id="scanbtn">
-      <video id="camvid" playsinline muted autoplay></video>
-      <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
-      <div id="scanCta">Scan to sell</div>
-      <div id="slots"></div>
+    <div id="scanwrap">
+      <div class="scanbtn" id="scanbtn">
+        <video id="camvid" playsinline muted autoplay></video>
+        <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
+        <div id="scanCta">Scan to sell</div>
+      </div>
     </div>
     <button id="shutter" hidden aria-label="shoot"></button>
     <small id="shootHint"></small>
@@ -420,20 +429,21 @@ var lastListing = null; // /list result: { board, ebay: {listingId, url} | null 
 
 // Two-slot shoot UI: filled thumbnails + a dashed placeholder for what's still needed.
 function renderShoot() {
-  var slots = "";
-  if (frames.length) {
-    for (var i = 0; i < 2; i++) {
-      slots += frames[i]
-        ? '<div class="slot"><img src="' + frames[i] + '"></div>'
-        : '<div class="slot ph">+</div>';
-    }
-  }
-  $("slots").innerHTML = slots;
+  var wrap = $("scanwrap");
+  wrap.querySelectorAll(".gotframe").forEach(function (el) { el.remove(); });
+  frames.forEach(function (f) {
+    var im = document.createElement("img");
+    im.className = "gotframe"; im.src = f; im.alt = "";
+    wrap.insertBefore(im, $("scanbtn"));
+  });
+  $("shoot").classList.remove("multi", "multi3");
+  if (frames.length === 1) $("shoot").classList.add("multi");
+  else if (frames.length >= 2) $("shoot").classList.add("multi3");
   if (frames.length === 0) {
     $("shootIcon").style.display = "";
     $("shootHint").textContent = "";
   } else {
-    $("shootIcon").style.display = "none";
+    $("shootIcon").style.display = stream ? "none" : "";
     $("shootHint").textContent = "one more angle";
   }
   renderLog();

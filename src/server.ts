@@ -16,6 +16,7 @@ import { triageClaims } from "./triage.js";
 import { verifyAgentic, type Prior, type Verdict } from "./verify.js";
 import { recordEvidence, evidenceEnabled } from "./evidence.js";
 import { publishToEbay, ebayEnabled } from "./ebay.js";
+import { createLabel, upsEnabled } from "./ups.js";
 import { mkdirSync, writeFileSync, readFileSync as readFileSyncFs, existsSync as existsSyncFs } from "node:fs";
 import { weeklyDigest } from "./digest.js";
 import { localBoard } from "./board/local.js";
@@ -84,11 +85,6 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #app { display: none; }
   #shoot { display: flex; flex-direction: column; align-items: center; justify-content: center;
            gap: 26px; width: 100%; min-height: 66vh; cursor: pointer; padding: 10px 0; }
-  .hintpill { display: inline-flex; align-items: center; gap: 8px;
-              background: rgba(255,255,255,.68); border: 1px solid rgba(255,255,255,.85);
-              -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
-              border-radius: 999px; padding: 13px 24px; font: 700 16px -apple-system, system-ui;
-              color: #1F2937; box-shadow: 0 12px 30px rgba(80,70,160,.14); }
   #shoot:active .vf { transform: scale(.97); }
   /* the scanner viewfinder */
   .vf { position: relative; width: 236px; height: 236px; border-radius: 26px;
@@ -108,7 +104,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #shoot b { font-size: 21px; font-weight: 800; letter-spacing: -0.01em;
              background: linear-gradient(95deg, #4F46E5, #9333EA 60%, #DD7A51);
              -webkit-background-clip: text; background-clip: text; color: transparent; }
-  #shoot small { color: rgba(31,41,55,.5); }
+  #shoot small { font-size: 15px; font-weight: 600; color: rgba(31,41,55,.45); letter-spacing: .01em; }
   #slots { display: flex; gap: 10px; justify-content: center; }
   #slots:empty { display: none; }
   #slots .slot { width: 66px; height: 66px; border-radius: 14px; }
@@ -226,6 +222,9 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .ebayw i:nth-child(1) { color: #E53238; } .ebayw i:nth-child(2) { color: #0064D2; }
   .ebayw i:nth-child(3) { color: #F5AF02; } .ebayw i:nth-child(4) { color: #86B817; }
   .ebayid { font-size: 17px; font-weight: 800; color: #1F2937; margin-left: 6px; }
+  .gopill { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; margin-left: 4px;
+            background: #1F2937; color: #fff; display: flex; align-items: center;
+            justify-content: center; font-weight: 800; font-size: 17px; text-decoration: none; }
   .cgrid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top: 12px; }
   .cgrid div { text-align: center; }
   .cgrid b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
@@ -301,11 +300,9 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
     <input id="cap" type="file" accept="image/*" capture="environment" hidden>
     <div class="vf">
       <span class="cor c1"></span><span class="cor c2"></span><span class="cor c3"></span><span class="cor c4"></span>
-      <div class="scanline"></div>
       <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
       <div id="slots"></div>
     </div>
-    <div class="hintpill" id="shootLabel">📷 Scan your item</div>
     <small id="shootHint"></small>
   </label>
 
@@ -379,11 +376,11 @@ function renderShoot() {
   }
   $("slots").innerHTML = slots;
   if (frames.length === 0) {
-    $("shootIcon").style.display = ""; $("shootLabel").style.display = "";
-    $("shootLabel").textContent = "📷 Scan your item"; $("shootHint").textContent = "";
+    $("shootIcon").style.display = "";
+    $("shootHint").textContent = "";
   } else if (frames.length === 1) {
-    $("shootIcon").style.display = "none"; $("shootLabel").style.display = "none";
-    $("shootHint").textContent = "1 more photo required";
+    $("shootIcon").style.display = "none";
+    $("shootHint").textContent = "one more angle";
   }
 }
 function chip(text, cls) { return '<span class="' + cls + '">' + text + '</span>'; }
@@ -524,10 +521,11 @@ function engage(v, p) {
   }).then(function (r) { return r.json(); }).then(function (li) {
     lastListing = li;
     if (li.ebay) {
-      pub.innerHTML = ball(true) +
-        '<div class="fmain"><div class="fbig"><span class="ebayw"><i>e</i><i>b</i><i>a</i><i>y</i></span>' +
+      pub.innerHTML =
+        '<div class="fmain"><span class="ebayw"><i>e</i><i>b</i><i>a</i><i>y</i></span>' +
         '<span class="ebayid">#' + li.ebay.listingId + '</span></div>' +
-        '<div class="fsub"><a href="' + li.ebay.url + '" target="_blank" style="color:inherit;font-weight:700">published ✓ · view listing</a></div></div>';
+        ball(true) +
+        '<a class="gopill" href="' + li.ebay.url + '" target="_blank">→</a>';
     } else {
       pub.innerHTML = ball(true) +
         '<div class="fmain"><div class="fbig">Listed — $' + p.suggestedUSD + '</div>' +
@@ -628,8 +626,28 @@ function flyShip(v, p, tg, sellable) {
       '<div class="lblbtns"><button class="dl" id="lblDl">⬇ Download</button>' +
       '<button class="pr" id="lblPr">🖨 Print</button></div></div>');
     sp.querySelector("#shipTo").innerHTML = esc(who) + " M.<br>2847 Juniper Lane<br>Orlando, FL 32803";
-    sp.querySelector("#lblDl").onclick = function (e) { e.stopPropagation(); labelPng(addr, v, p, false); };
-    sp.querySelector("#lblPr").onclick = function (e) { e.stopPropagation(); labelPng(addr, v, p, true); };
+    function realLabel(doPrint) {
+      fetch("/label", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toName: who + " M.", title: v.itemName || "item" }),
+      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (l) {
+        if (l && l.gifB64) {
+          var url = "data:image/gif;base64," + l.gifB64;
+          sp.querySelector(".fbig").textContent = "UPS " + l.tracking;
+          if (doPrint) {
+            var w2 = window.open("");
+            if (w2) w2.document.write('<img src="' + url + '" style="width:100%" onload="print()">');
+          } else {
+            var a = document.createElement("a");
+            a.href = url; a.download = "ups-label.gif"; a.click();
+          }
+        } else {
+          labelPng(addr, v, p, doPrint);
+        }
+      }).catch(function () { labelPng(addr, v, p, doPrint); });
+    }
+    sp.querySelector("#lblDl").onclick = function (e) { e.stopPropagation(); realLabel(false); };
+    sp.querySelector("#lblPr").onclick = function (e) { e.stopPropagation(); realLabel(true); };
   } else {
     addPill(ball(true) +
       '<div class="fmain"><div class="fbig">Label on sale</div>' +
@@ -792,7 +810,11 @@ createServer(async (req, res) => {
       const title = String(b.title ?? "item").slice(0, 120);
       const condition = String(b.condition ?? "used");
       const priceUSD = Math.max(1, Math.round(Number(b.priceUSD) || 1));
-      const description = String(b.description ?? `${title} — verified real by onlist-agent. Condition: ${condition}.`);
+      const description = String(b.description ??
+        `${title}\n\nCondition: ${condition}. Single owner, sold through the onlist autopilot agent.\n\n` +
+        `Authenticity: this listing was created from a live camera capture verified as a REAL physical object ` +
+        `by an AI examiner (multi-angle scene-continuity check — no screenshots, no re-shot catalog photos, no AI renders).\n\n` +
+        `Ships within 2 business days, USPS Priority, tracked.`);
       // the first verified frame becomes the listing photo: save it and serve it
       // publicly (eBay fetches images by URL)
       let imageUrl = "https://raw.githubusercontent.com/itsbigdill/onlist-agent/main/bench/cases/catalog-iphone/1.jpg";
@@ -802,8 +824,12 @@ createServer(async (req, res) => {
         const fname = `f-${Date.now().toString(36)}.${frame[1] === "png" ? "png" : "jpg"}`;
         mkdirSync(`${RUNS}/frames`, { recursive: true });
         writeFileSync(`${RUNS}/frames/${fname}`, Buffer.from(frame[2], "base64"));
-        const base = process.env.PUBLIC_BASE_URL ?? `https://${req.headers.host ?? "agent.onlist.ai"}`;
-        imageUrl = `${base}/frame/${fname}`;
+        const host = String(req.headers.host ?? "");
+        // eBay fetches images by URL — a LAN/localhost address can never work,
+        // keep the public fallback there (prod domain is public, uses the frame)
+        const isPrivate = /^(localhost|127\.|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+        const base = process.env.PUBLIC_BASE_URL ?? (isPrivate || !host ? "" : `https://${host}`);
+        if (base) imageUrl = `${base}/frame/${fname}`;
       }
       // the demo board records the listing regardless of eBay
       const board = localBoard();
@@ -822,6 +848,16 @@ createServer(async (req, res) => {
         // eBay hiccup must not kill the flight — the board listing stands
         return json(res, 200, { board: item?.id ?? null, ebay: null,
                                 ebayError: String((e as Error).message).slice(0, 200) });
+      }
+    }
+    if (req.method === "POST" && req.url === "/label") {
+      const b = await readBody(req);
+      if (!upsEnabled()) return json(res, 501, { error: "UPS sandbox not configured" });
+      try {
+        const label = await createLabel({ toName: String(b.toName ?? "Buyer"), title: String(b.title ?? "item") });
+        return json(res, 200, label);
+      } catch (e) {
+        return json(res, 502, { error: String((e as Error).message).slice(0, 200) });
       }
     }
     if (req.method === "GET" && req.url && req.url.startsWith("/frame/")) {

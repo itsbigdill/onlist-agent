@@ -238,7 +238,16 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .negline.no .nic { background: #FBE7DF; color: #C0503C; }
   .negline.mid .nic { background: #F8EFD8; color: #C98A2B; }
   .negline .nw { color: rgba(31,41,55,.75); }
-  .soldbig { font-size: 24px; font-weight: 800; margin-top: 12px; }
+  .soldbig { font-size: 26px; font-weight: 800; margin-top: 12px; letter-spacing: -0.02em; }
+  .dava { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%; background: #1F9D5B;
+          color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center;
+          justify-content: center; }
+  .chat { margin-top: 12px; }
+  .bub { max-width: 88%; width: fit-content; padding: 10px 14px; border-radius: 17px;
+         font-size: 14px; line-height: 1.4; margin-top: 8px; color: #1F2937; }
+  .bub.them { background: rgba(31,41,55,.07); border-bottom-left-radius: 5px; }
+  .bub.me { background: linear-gradient(120deg, rgba(79,70,229,.14), rgba(168,85,247,.14));
+            margin-left: auto; border-bottom-right-radius: 5px; }
   .lblbtns { display: flex; gap: 9px; margin-top: 12px; }
   .lblbtns button { flex: 1; border: 0; border-radius: 14px; padding: 13px;
            font: 800 14.5px -apple-system, system-ui; cursor: pointer; }
@@ -600,17 +609,34 @@ function flyDeal(v, p, tg, ranked) {
   var sellable = top && top.score >= 70;
   setTimeout(function () {
     dp.querySelector(".waitball").outerHTML = ball(true);
-    if (sellable) {
-      dp.querySelector(".fbig").textContent = "Deal closed";
-      var sb = document.createElement("div");
-      sb.className = "soldbig";
-      sb.textContent = "SOLD · $" + p.suggestedUSD + " → " + nameOfB(top);
-      dp.querySelector(".fmain").appendChild(sb);
-    } else {
-      dp.querySelector(".fbig").textContent = "Live — negotiating inside your range";
-    }
-    flyShip(v, p, tg, sellable);
+    dp.querySelector(".fbig").textContent = ranked.length + " offers";
+    flyClose(v, p, tg, ranked, sellable);
   }, 600 * (lines.length + 1) + 500);
+}
+
+// The deal itself: the buyer, the number, and the conversation that closed it.
+function flyClose(v, p, tg, ranked, sellable) {
+  if (!sellable) {
+    addPill(ball(true) +
+      '<div class="fmain"><div class="fbig">Live — negotiating inside your range</div></div>');
+    flyShip(v, p, tg, false);
+    return;
+  }
+  var top = ranked[0];
+  var who = nameOfB(top);
+  var buyer = DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {};
+  var reply = (top.draftReply || "It is available — $" + p.suggestedUSD + " and it is yours.").slice(0, 220);
+  var cp = addPill(
+    '<div class="dava">' + esc(who.charAt(0).toUpperCase()) + '</div>' +
+    '<div class="fmain"><div class="fbig">' + esc(who) + '</div>' +
+    '<div class="fsub">accepted · pickup / tracked shipping</div>' +
+    '<div class="soldbig">SOLD · $' + p.suggestedUSD + '</div>' +
+    '<div class="chat">' +
+      '<div class="bub them">' + esc(buyer.message || "Is this still available?") + '</div>' +
+      '<div class="bub me">' + esc(reply) + '</div>' +
+      '<div class="bub them">Deal — $' + p.suggestedUSD + ' works 👍</div>' +
+    '</div></div>' + ball(true));
+  setTimeout(function () { flyShip(v, p, tg, true); }, 700);
 }
 
 function flyShip(v, p, tg, sellable) {

@@ -222,9 +222,8 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .ebayw i:nth-child(1) { color: #E53238; } .ebayw i:nth-child(2) { color: #0064D2; }
   .ebayw i:nth-child(3) { color: #F5AF02; } .ebayw i:nth-child(4) { color: #86B817; }
   .ebayid { font-size: 17px; font-weight: 800; color: #1F2937; margin-left: 6px; }
-  .gopill { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; margin-left: 4px;
-            background: #1F2937; color: #fff; display: flex; align-items: center;
-            justify-content: center; font-weight: 800; font-size: 17px; text-decoration: none; }
+  .gopill { margin-left: 2px; color: #1F2937; font-weight: 800; font-size: 24px;
+            text-decoration: none; line-height: 1; }
   .cgrid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top: 12px; }
   .cgrid div { text-align: center; }
   .cgrid b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }

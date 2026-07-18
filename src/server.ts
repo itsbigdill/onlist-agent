@@ -832,6 +832,39 @@ function flyShip(v, p, tg, sellable) {
   }
   $("fdemo").hidden = false;
   $("again3").hidden = false;
+  // survive a round-trip to the eBay tab: iOS reloads the page on return
+  try {
+    var top2 = ((tg && tg.ranked) || [])[0] || {};
+    sessionStorage.setItem("flight", JSON.stringify({
+      html: $("flight").innerHTML,
+      v: { itemName: v.itemName, condition: v.condition },
+      p: { suggestedUSD: p.suggestedUSD, floorUSD: p.floorUSD },
+      who: sellable ? nameOfB(top2) : null,
+    }));
+  } catch (e) {}
+}
+
+function rebindLabelButtons(saved) {
+  var dl = document.getElementById("lblDl"), pr = document.getElementById("lblPr");
+  if (!dl) return;
+  var who = saved.who || "Buyer";
+  var addr = who + " M., 2847 Juniper Lane, Orlando, FL 32803";
+  dl.onclick = function (e) { e.stopPropagation(); labelPng(addr, saved.v, saved.p, false); };
+  pr.onclick = function (e) { e.stopPropagation(); labelPng(addr, saved.v, saved.p, true); };
+}
+
+function restoreFlight() {
+  try {
+    var raw = sessionStorage.getItem("flight");
+    if (!raw) return false;
+    var saved = JSON.parse(raw);
+    $("flight").innerHTML = saved.html;
+    rebindLabelButtons(saved);
+    $("fdemo").hidden = false;
+    $("again3").hidden = false;
+    panel("auto");
+    return true;
+  } catch (e) { return false; }
 }
 
 // Render the label as a real PNG: Download saves it, Print opens the dialog.
@@ -935,6 +968,7 @@ function reset() {
   frames = []; verdict = null; lastPrice = null; pending = null; lastListing = null;
   $("more").hidden = true;
   $("flight").innerHTML = "";
+  try { sessionStorage.removeItem("flight"); } catch (e) {}
   renderShoot();
   if (!stream) startCam();
   panel("shoot");
@@ -955,10 +989,12 @@ if (isDesktop) {
   $("qrimg").src = "https://api.qrserver.com/v1/create-qr-code/?size=480x480&data=" + encodeURIComponent(target);
 } else {
   $("app").style.display = "block";
-  // HTTPS lets us open the live camera right away (permission prompt on the
-  // first visit, instant after) — no tap, no native camera sheet
-  startCam();
   renderLog();
+  if (!restoreFlight()) {
+    // HTTPS lets us open the live camera right away (permission prompt on the
+    // first visit, instant after) — no tap, no native camera sheet
+    startCam();
+  }
 }
 </script>`;
 

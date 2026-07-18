@@ -94,10 +94,6 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
                     linear-gradient(130deg,#4F46E5,#A855F7) border-box;
         border: 3px solid transparent;
         box-shadow: 0 18px 40px rgba(80,70,160,.16); }
-  #camvid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        display: none; }
-  .scanbtn.live #camvid { display: block; }
-  .scanbtn.live #shootIcon, .scanbtn.live #scanCta { display: none; }
   #scanCta { font-size: 19px; font-weight: 800; letter-spacing: -0.01em;
         background: linear-gradient(120deg,#4F46E5,#9333EA);
         -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -110,11 +106,28 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #shoot.multi .scanbtn { width: 156px; height: 156px; border-radius: 26px; }
   #shoot.multi3 .scanbtn, #shoot.multi3 .gotframe { width: 104px; height: 104px; border-radius: 20px; }
   #shoot.multi #scanCta, #shoot.multi3 #scanCta { display: none; }
-  #shutter { width: 68px; height: 68px; border-radius: 50%; cursor: pointer;
-        background: linear-gradient(#fff,#fff) padding-box,
-                    linear-gradient(130deg,#4F46E5,#A855F7) border-box;
-        border: 4px solid transparent; box-shadow: 0 10px 24px rgba(80,70,160,.25); }
+  /* fullscreen camera: live view → frozen shot → Use / Retake */
+  #camfull { position: fixed; inset: 0; z-index: 60; background: #000; }
+  #camfull[hidden] { display: none; }
+  #camvid, #camshot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #camclose { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 16px;
+        z-index: 2; width: 42px; height: 42px; border-radius: 50%; border: 0;
+        background: rgba(0,0,0,.45); color: #fff; font-size: 19px; cursor: pointer; }
+  #camhint { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 22px); left: 0; right: 0;
+        z-index: 1; text-align: center; color: #fff; font: 700 16px -apple-system, system-ui;
+        text-shadow: 0 1px 10px rgba(0,0,0,.6); pointer-events: none; }
+  #cambar { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
+        left: 0; right: 0; z-index: 2; display: flex; justify-content: center; }
+  #shutter { width: 78px; height: 78px; border-radius: 50%; cursor: pointer;
+        background: #fff; border: 6px solid rgba(255,255,255,.35); background-clip: padding-box; }
   #shutter:active { transform: scale(.9); }
+  #camconfirm { display: flex; gap: 12px; width: 100%; padding: 0 22px; }
+  #camconfirm[hidden] { display: none; }
+  #camconfirm button { flex: 1; border: 0; border-radius: 18px; padding: 17px;
+        font: 800 17px -apple-system, system-ui; cursor: pointer; }
+  #retake { background: rgba(255,255,255,.22); color: #fff;
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  #usephoto { background: linear-gradient(120deg,#4F46E5,#7C3AED); color: #fff; }
   .logpill { border: 1px solid rgba(255,255,255,.85); cursor: pointer;
         background: rgba(255,255,255,.6);
         -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
@@ -354,12 +367,10 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
     <input id="cap" type="file" accept="image/*" capture="environment" hidden>
     <div id="scanwrap">
       <div class="scanbtn" id="scanbtn">
-        <video id="camvid" playsinline muted autoplay></video>
         <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
         <div id="scanCta">Scan to sell</div>
       </div>
     </div>
-    <button id="shutter" hidden aria-label="shoot"></button>
     <small id="shootHint"></small>
     <button id="soldlog" class="logpill" hidden></button>
   </div>
@@ -396,6 +407,20 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   <div id="hist" class="panel">
     <div id="histRows"></div>
     <button id="histBack" class="ghostbtn">Back</button>
+  </div>
+
+  <div id="camfull" hidden>
+    <video id="camvid" playsinline muted autoplay></video>
+    <img id="camshot" alt="" hidden>
+    <button id="camclose" aria-label="close">✕</button>
+    <div id="camhint"></div>
+    <div id="cambar">
+      <button id="shutter" aria-label="shoot"></button>
+      <div id="camconfirm" hidden>
+        <button id="retake">Retake</button>
+        <button id="usephoto">Use this photo</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -443,7 +468,7 @@ function renderShoot() {
     $("shootIcon").style.display = "";
     $("shootHint").textContent = "";
   } else {
-    $("shootIcon").style.display = stream ? "none" : "";
+    $("shootIcon").style.display = "";
     $("shootHint").textContent = "one more angle";
   }
   renderLog();
@@ -461,7 +486,8 @@ function panel(id, label) {
 // Two photos in → the check fires by itself. No verify button.
 function addFrame(d) {
   frames.push(d); renderShoot();
-  if (pending ? frames.length >= 3 : frames.length >= 2) { stopCam(); verify(); }
+  if (pending ? frames.length >= 3 : frames.length >= 2) { closeCam(); verify(); }
+  else $("camhint").textContent = "one more angle";
 }
 $("cap").onchange = function () {
   var f = this.files[0]; this.value = "";
@@ -469,27 +495,28 @@ $("cap").onchange = function () {
   shrink(f).then(function (d) { if (d) addFrame(d); });
 };
 
-// ————— live in-page camera: the square button becomes the viewfinder —————
-var stream = null;
-function startCam() {
-  if (stream || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+// ————— fullscreen camera: tap the button → live view → shutter → confirm —————
+var stream = null, lastShot = null;
+function openCam() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("cap").click(); return; }
+  $("camfull").hidden = false;
+  liveView();
+  if (stream) return;
   navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-    .then(function (s) {
-      stream = s;
-      $("camvid").srcObject = s;
-      $("scanbtn").classList.add("live");
-      $("shutter").hidden = false;
-      $("shootHint").textContent = frames.length === 1 ? "one more angle" : "";
-    })
-    .catch(function () { /* denied — the button falls back to the native camera */ });
+    .then(function (s) { stream = s; $("camvid").srcObject = s; })
+    .catch(function () { closeCam(); $("cap").click(); });
 }
-function stopCam() {
-  if (!stream) return;
-  stream.getTracks().forEach(function (t) { t.stop(); });
-  stream = null;
+function closeCam() {
+  if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
   $("camvid").srcObject = null;
-  $("scanbtn").classList.remove("live");
-  $("shutter").hidden = true;
+  $("camfull").hidden = true;
+}
+function liveView() {
+  lastShot = null;
+  $("camshot").hidden = true;
+  $("camconfirm").hidden = true;
+  $("shutter").hidden = false;
+  $("camhint").textContent = frames.length ? "one more angle" : "";
 }
 function snap() {
   var vid = $("camvid");
@@ -498,10 +525,23 @@ function snap() {
   var w = Math.min(1280, vid.videoWidth);
   c.width = w; c.height = Math.round(w * vid.videoHeight / vid.videoWidth);
   c.getContext("2d").drawImage(vid, 0, 0, c.width, c.height);
-  addFrame(c.toDataURL("image/jpeg", 0.85));
+  lastShot = c.toDataURL("image/jpeg", 0.85);
+  $("camshot").src = lastShot;
+  $("camshot").hidden = false;
+  $("shutter").hidden = true;
+  $("camconfirm").hidden = false;
+  $("camhint").textContent = "";
 }
-$("scanbtn").onclick = function () { if (stream) snap(); else $("cap").click(); };
+$("scanbtn").onclick = function () { openCam(); };
 $("shutter").onclick = function () { snap(); };
+$("retake").onclick = function () { liveView(); };
+$("camclose").onclick = function () { closeCam(); };
+$("usephoto").onclick = function () {
+  if (!lastShot) return;
+  var d = lastShot;
+  liveView();
+  addFrame(d);
+};
 
 function verify() {
   panel("busy", "Checking if it's real…");
@@ -962,7 +1002,7 @@ function showHist() {
   panel("hist");
 }
 $("soldlog").onclick = showHist;
-$("histBack").onclick = function () { panel("shoot"); if (!stream) startCam(); };
+$("histBack").onclick = function () { panel("shoot"); };
 
 function reset() {
   frames = []; verdict = null; lastPrice = null; pending = null; lastListing = null;
@@ -970,10 +1010,9 @@ function reset() {
   $("flight").innerHTML = "";
   try { sessionStorage.removeItem("flight"); } catch (e) {}
   renderShoot();
-  if (!stream) startCam();
   panel("shoot");
 }
-$("more").onclick = function () { panel("shoot"); if (!stream) startCam(); };
+$("more").onclick = function () { panel("shoot"); openCam(); };
 $("again").onclick = reset;
 $("again3").onclick = reset;
 $("again4").onclick = reset;
@@ -990,11 +1029,7 @@ if (isDesktop) {
 } else {
   $("app").style.display = "block";
   renderLog();
-  if (!restoreFlight()) {
-    // HTTPS lets us open the live camera right away (permission prompt on the
-    // first visit, instant after) — no tap, no native camera sheet
-    startCam();
-  }
+  restoreFlight();
 }
 </script>`;
 

@@ -237,8 +237,14 @@ export async function publishToEbay(opts: {
   if (!offerId) throw new Error(`ebay offer: ${JSON.stringify(offer.data).slice(0, 250)}`);
 
   const pub = await api("POST", `/sell/inventory/v1/offer/${offerId}/publish`, {});
-  const listingId = pub.data?.listingId;
-  if (!listingId) throw new Error(`ebay publish: ${JSON.stringify(pub.data).slice(0, 250)}`);
+  let listingId = pub.data?.listingId;
+  if (!listingId) {
+    // 25002 "already have on eBay: <title> (<id>)" — the item IS live; use it
+    const errText = JSON.stringify(pub.data);
+    const dup = /already have on eBay[^(]*\((\d+)\)/.exec(errText);
+    if (dup) listingId = dup[1];
+    else throw new Error(`ebay publish: ${errText.slice(0, 250)}`);
+  }
 
   return { listingId: String(listingId), url: `https://sandbox.ebay.com/itm/${listingId}`, categoryId };
 }

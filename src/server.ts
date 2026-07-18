@@ -85,9 +85,46 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   #app { display: none; }
   #shoot { display: flex; flex-direction: column; align-items: center; justify-content: center;
            gap: 26px; width: 100%; min-height: 66vh; cursor: pointer; padding: 10px 0; }
-  #shoot:active .vf { transform: scale(.97); }
-  /* the scanner viewfinder */
-  .vf { position: relative; width: 236px; height: 236px; border-radius: 26px;
+  #shoot:active .scanbtn { transform: scale(.97); }
+  /* the scan button: white square, gradient border, becomes a live viewfinder */
+  .scanbtn { position: relative; width: 216px; height: 216px; border-radius: 30px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 12px; overflow: hidden; cursor: pointer; transition: transform .15s;
+        background: linear-gradient(#fff,#fff) padding-box,
+                    linear-gradient(130deg,#4F46E5,#A855F7) border-box;
+        border: 3px solid transparent;
+        box-shadow: 0 18px 40px rgba(80,70,160,.16); }
+  #camvid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        display: none; }
+  .scanbtn.live #camvid { display: block; }
+  .scanbtn.live #shootIcon, .scanbtn.live #scanCta { display: none; }
+  #scanCta { font-size: 19px; font-weight: 800; letter-spacing: -0.01em;
+        background: linear-gradient(120deg,#4F46E5,#9333EA);
+        -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #slots { position: absolute; bottom: 10px; left: 0; right: 0; z-index: 2; }
+  #shutter { width: 68px; height: 68px; border-radius: 50%; cursor: pointer;
+        background: linear-gradient(#fff,#fff) padding-box,
+                    linear-gradient(130deg,#4F46E5,#A855F7) border-box;
+        border: 4px solid transparent; box-shadow: 0 10px 24px rgba(80,70,160,.25); }
+  #shutter:active { transform: scale(.9); }
+  .logpill { border: 1px solid rgba(255,255,255,.85); cursor: pointer;
+        background: rgba(255,255,255,.6);
+        -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+        border-radius: 999px; padding: 10px 20px; margin-top: 6px;
+        font: 700 14px -apple-system, system-ui; color: rgba(31,41,55,.65); }
+  .payout { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; color: #1F9D5B;
+        margin: 6px 0 8px; }
+  .prow { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px;
+        color: rgba(31,41,55,.55); margin-top: 3px; }
+  .prow b { font-weight: 700; color: rgba(31,41,55,.75); }
+  .hrow { display: flex; align-items: center; gap: 12px; text-align: left; }
+  .hrow img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover;
+        flex: 0 0 46px; }
+  .hrow .hm { flex: 1; min-width: 0; }
+  .hrow .ht { font-weight: 700; font-size: 14.5px; white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis; }
+  .hrow .hd { font-size: 12px; color: rgba(31,41,55,.45); }
+  .hrow .hp { font-weight: 800; font-size: 16px; color: #1F9D5B; white-space: nowrap; }
         display: flex; align-items: center; justify-content: center;
         background: rgba(124,58,237,.05); overflow: hidden; transition: transform .15s; }
   .vf .cor { position: absolute; width: 30px; height: 30px; border: 3px solid #7C3AED; }
@@ -106,6 +143,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
              -webkit-background-clip: text; background-clip: text; color: transparent; }
   #shoot small { font-size: 15px; font-weight: 600; color: rgba(31,41,55,.45); letter-spacing: .01em; }
   #slots { display: flex; gap: 10px; justify-content: center; }
+  #slots .slot { box-shadow: 0 4px 12px rgba(31,41,55,.3); }
   #slots:empty { display: none; }
   #slots .slot { width: 66px; height: 66px; border-radius: 14px; }
   #slots .slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
@@ -200,7 +238,7 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   .astep .at { font-weight: 700; font-size: 14.5px; }
   .astep .ad { font-size: 12px; color: rgba(31,41,55,.5); }
   /* the flight: every step is a big pill that stays on screen */
-  #auto.panel { background: transparent; border: 0; box-shadow: none;
+  #auto.panel, #hist.panel { background: transparent; border: 0; box-shadow: none;
                 -webkit-backdrop-filter: none; backdrop-filter: none; padding: 6px 0; }
   .fpill { display: flex; align-items: center; gap: 14px; text-align: left;
            background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.8);
@@ -304,15 +342,18 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
 </div>
 
 <div id="app">
-  <label id="shoot">
+  <div id="shoot">
     <input id="cap" type="file" accept="image/*" capture="environment" hidden>
-    <div class="vf">
-      <span class="cor c1"></span><span class="cor c2"></span><span class="cor c3"></span><span class="cor c4"></span>
-      <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
+    <div class="scanbtn" id="scanbtn">
+      <video id="camvid" playsinline muted autoplay></video>
+      <svg id="shootIcon" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A2 2 0 0 1 10 3.3h4a2 2 0 0 1 1.7.9L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
+      <div id="scanCta">Scan to sell</div>
       <div id="slots"></div>
     </div>
+    <button id="shutter" hidden aria-label="shoot"></button>
     <small id="shootHint"></small>
-  </label>
+    <button id="soldlog" class="logpill" hidden></button>
+  </div>
 
   <div id="busy"><div class="spin"></div><span id="busyLabel">Checking if it's real…</span></div>
 
@@ -340,7 +381,12 @@ const PAGE = `<!doctype html><meta charset="utf-8"><title>onlist-agent</title>
   <div id="auto" class="panel">
     <div id="flight"></div>
     <div class="demonote" id="fdemo" hidden>demo: buyers &amp; sale are simulated — the eBay listing is real</div>
-    <button id="again3" class="ghostbtn" hidden>Done</button>
+    <button id="again3" class="cta" hidden>📷 Sell another item</button>
+  </div>
+
+  <div id="hist" class="panel">
+    <div id="histRows"></div>
+    <button id="histBack" class="ghostbtn">Back</button>
   </div>
 
 </div>
@@ -386,15 +432,16 @@ function renderShoot() {
   if (frames.length === 0) {
     $("shootIcon").style.display = "";
     $("shootHint").textContent = "";
-  } else if (frames.length === 1) {
+  } else {
     $("shootIcon").style.display = "none";
     $("shootHint").textContent = "one more angle";
   }
+  renderLog();
 }
 function chip(text, cls) { return '<span class="' + cls + '">' + text + '</span>'; }
 function esc(s) { return String(s).replace(/[<>&]/g, function (c) { return { "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]; }); }
 function panel(id, label) {
-  ["shoot", "res", "offer", "auto"].forEach(function (p) { $(p).style.display = "none"; });
+  ["shoot", "res", "offer", "auto", "hist"].forEach(function (p) { $(p).style.display = "none"; });
   $("busy").style.display = id === "busy" ? "block" : "none";
   if (id === "busy") { $("busyLabel").textContent = label; return; }
   $(id).style.display = id === "shoot" ? "flex" : "block";
@@ -402,15 +449,49 @@ function panel(id, label) {
 
 // Each tap of the shoot zone opens the native camera for one photo.
 // Two photos in → the check fires by itself. No verify button.
+function addFrame(d) {
+  frames.push(d); renderShoot();
+  if (pending ? frames.length >= 3 : frames.length >= 2) { stopCam(); verify(); }
+}
 $("cap").onchange = function () {
   var f = this.files[0]; this.value = "";
   if (!f) return;
-  shrink(f).then(function (d) {
-    if (!d) return;
-    frames.push(d); renderShoot();
-    if (pending ? frames.length >= 3 : frames.length >= 2) verify();
-  });
+  shrink(f).then(function (d) { if (d) addFrame(d); });
 };
+
+// ————— live in-page camera: the square button becomes the viewfinder —————
+var stream = null;
+function startCam() {
+  if (stream || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+    .then(function (s) {
+      stream = s;
+      $("camvid").srcObject = s;
+      $("scanbtn").classList.add("live");
+      $("shutter").hidden = false;
+      $("shootHint").textContent = frames.length === 1 ? "one more angle" : "";
+    })
+    .catch(function () { /* denied — the button falls back to the native camera */ });
+}
+function stopCam() {
+  if (!stream) return;
+  stream.getTracks().forEach(function (t) { t.stop(); });
+  stream = null;
+  $("camvid").srcObject = null;
+  $("scanbtn").classList.remove("live");
+  $("shutter").hidden = true;
+}
+function snap() {
+  var vid = $("camvid");
+  if (!vid.videoWidth) return;
+  var c = document.createElement("canvas");
+  var w = Math.min(1280, vid.videoWidth);
+  c.width = w; c.height = Math.round(w * vid.videoHeight / vid.videoWidth);
+  c.getContext("2d").drawImage(vid, 0, 0, c.width, c.height);
+  addFrame(c.toDataURL("image/jpeg", 0.85));
+}
+$("scanbtn").onclick = function () { if (stream) snap(); else $("cap").click(); };
+$("shutter").onclick = function () { snap(); };
 
 function verify() {
   panel("busy", "Checking if it's real…");
@@ -644,6 +725,22 @@ function flyClose(v, p, tg, ranked, sellable) {
     sb.className = "soldbig";
     sb.textContent = "SOLD · $" + closedUSD;
     cp.querySelector(".fmain").insertBefore(sb, chatBox);
+    // the dopamine hit: what actually lands on your account
+    var fee = Math.round((closedUSD * 0.1325 + 0.30) * 100) / 100;
+    var payout = Math.round((closedUSD - fee) * 100) / 100;
+    var pp = addPill(ball(true) +
+      '<div class="fmain"><div class="fbig">Money on the way</div>' +
+      '<div class="payout" id="payN">+$0</div>' +
+      '<div class="prow"><span>Sold</span><b>$' + closedUSD.toFixed(2) + '</b></div>' +
+      '<div class="prow"><span>eBay fee (13.25% + $0.30)</span><b>−$' + fee.toFixed(2) + '</b></div>' +
+      '<div class="prow"><span>To your bank · 1–2 days</span><b>$' + payout.toFixed(2) + '</b></div></div>');
+    var payN = pp.querySelector("#payN"), pi = 0, psteps = 24;
+    var piv = setInterval(function () {
+      pi++;
+      payN.textContent = "+$" + (payout * pi / psteps).toFixed(2);
+      if (pi >= psteps) clearInterval(piv);
+    }, 45);
+    logSale(v, closedUSD, payout);
     // a REAL sandbox purchase? show the actual eBay order before the label
     var lid = lastListing && lastListing.ebay && lastListing.ebay.listingId;
     if (lid) {
@@ -769,14 +866,70 @@ var DEMO_BUYERS = [
 ];
 
 
+// ————— sold log: every closed flight is kept, reviewable from the home screen
+function logSale(v, usd, payout) {
+  try {
+    var entry = { t: v.itemName || "item", usd: usd, pay: payout, ts: Date.now(),
+                  id: lastListing && lastListing.ebay ? lastListing.ebay.listingId : null,
+                  url: lastListing && lastListing.ebay ? lastListing.ebay.url : null, img: null };
+    var img = new Image();
+    img.onload = function () {
+      var c = document.createElement("canvas"); c.width = c.height = 96;
+      var s = Math.min(img.width, img.height);
+      c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 96, 96);
+      entry.img = c.toDataURL("image/jpeg", 0.7);
+      pushLog(entry);
+    };
+    img.onerror = function () { pushLog(entry); };
+    if (frames[0]) img.src = frames[0]; else pushLog(entry);
+  } catch (e) {}
+}
+function pushLog(entry) {
+  try {
+    var log = JSON.parse(localStorage.getItem("soldlog") || "[]");
+    log.unshift(entry);
+    localStorage.setItem("soldlog", JSON.stringify(log.slice(0, 30)));
+    renderLog();
+  } catch (e) {}
+}
+function getLog() {
+  try { return JSON.parse(localStorage.getItem("soldlog") || "[]"); } catch (e) { return []; }
+}
+function renderLog() {
+  var log = getLog();
+  var el = $("soldlog");
+  if (!log.length) { el.hidden = true; return; }
+  var total = log.reduce(function (a, e) { return a + (e.usd || 0); }, 0);
+  el.hidden = false;
+  el.textContent = "Sold · " + log.length + " · $" + Math.round(total);
+}
+function showHist() {
+  var log = getLog();
+  $("histRows").innerHTML = log.map(function (e) {
+    var d = new Date(e.ts);
+    var when = (d.getMonth() + 1) + "/" + d.getDate();
+    return '<div class="fpill in hrow">' +
+      (e.img ? '<img src="' + e.img + '" alt="">' : "") +
+      '<div class="hm"><div class="ht">' + esc(e.t) + '</div>' +
+      '<div class="hd">' + when + (e.id ? " · eBay #" + e.id : "") + '</div></div>' +
+      '<div class="hp">+$' + (e.pay != null ? e.pay.toFixed(0) : e.usd) + '</div>' +
+      (e.url ? '<a class="gopill" href="' + e.url + '" target="_blank">→</a>' : "") +
+      '</div>';
+  }).join("");
+  panel("hist");
+}
+$("soldlog").onclick = showHist;
+$("histBack").onclick = function () { panel("shoot"); if (!stream) startCam(); };
+
 function reset() {
   frames = []; verdict = null; lastPrice = null; pending = null; lastListing = null;
   $("more").hidden = true;
   $("flight").innerHTML = "";
   renderShoot();
+  if (!stream) startCam();
   panel("shoot");
 }
-$("more").onclick = function () { $("cap").click(); };
+$("more").onclick = function () { panel("shoot"); if (!stream) startCam(); };
 $("again").onclick = reset;
 $("again3").onclick = reset;
 $("again4").onclick = reset;
@@ -792,9 +945,10 @@ if (isDesktop) {
   $("qrimg").src = "https://api.qrserver.com/v1/create-qr-code/?size=480x480&data=" + encodeURIComponent(target);
 } else {
   $("app").style.display = "block";
-  // fire the camera immediately — one less tap; browsers that demand a
-  // gesture just fall back to the full-screen tap zone
-  setTimeout(function () { try { $("cap").click(); } catch (e) {} }, 400);
+  // HTTPS lets us open the live camera right away (permission prompt on the
+  // first visit, instant after) — no tap, no native camera sheet
+  startCam();
+  renderLog();
 }
 </script>`;
 

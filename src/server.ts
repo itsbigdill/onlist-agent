@@ -15,7 +15,7 @@ import { priceItem } from "./price.js";
 import { triageClaims, dealThread } from "./triage.js";
 import { verifyAgentic, type Prior, type Verdict } from "./verify.js";
 import { recordEvidence, evidenceEnabled } from "./evidence.js";
-import { publishToEbay, ebayEnabled } from "./ebay.js";
+import { publishToEbay, ebayEnabled, orderForListing } from "./ebay.js";
 import { createLabel, upsEnabled } from "./ups.js";
 import { mkdirSync, writeFileSync, readFileSync as readFileSyncFs, existsSync as existsSyncFs } from "node:fs";
 import { weeklyDigest } from "./digest.js";
@@ -644,7 +644,22 @@ function flyClose(v, p, tg, ranked, sellable) {
     sb.className = "soldbig";
     sb.textContent = "SOLD · $" + closedUSD;
     cp.querySelector(".fmain").insertBefore(sb, chatBox);
-    flyShip(v, p, tg, true);
+    // a REAL sandbox purchase? show the actual eBay order before the label
+    var lid = lastListing && lastListing.ebay && lastListing.ebay.listingId;
+    if (lid) {
+      fetch("/order?listingId=" + lid).then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.order) {
+          addPill(
+            '<div class="fmain"><span class="ebayw"><i>e</i><i>b</i><i>a</i><i>y</i></span>' +
+            '<span class="ebayid">order ' + esc(d.order.orderId) + '</span>' +
+            '<div class="fsub">' + esc(d.order.buyer) + " · $" + d.order.totalUSD +
+            (d.order.paid ? " · PAID" : "") + '</div></div>' + ball(true));
+        }
+        flyShip(v, p, tg, true);
+      }).catch(function () { flyShip(v, p, tg, true); });
+    } else {
+      flyShip(v, p, tg, true);
+    }
   }
   fetch("/chat", {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -904,6 +919,12 @@ createServer(async (req, res) => {
         return json(res, 200, { board: item?.id ?? null, ebay: null,
                                 ebayError: String((e as Error).message).slice(0, 200) });
       }
+    }
+    if (req.method === "GET" && req.url && req.url.startsWith("/order?")) {
+      const listingId = new URL(req.url, "http://x").searchParams.get("listingId") ?? "";
+      if (!ebayEnabled() || !listingId) return json(res, 200, { order: null });
+      try { return json(res, 200, { order: await orderForListing(listingId) }); }
+      catch { return json(res, 200, { order: null }); }
     }
     if (req.method === "POST" && req.url === "/chat") {
       const b = await readBody(req);

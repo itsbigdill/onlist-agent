@@ -31,9 +31,25 @@ async function token(): Promise<string> {
     body: new URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: process.env.EBAY_REFRESH_TOKEN!,
-      scope: "https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account",
+      scope: "https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account https://api.ebay.com/oauth/api_scope/sell.fulfillment",
     }),
   });
+  if (res.status === 400) {
+    // older consent without the fulfillment scope — retry with the base pair
+    const res2 = await fetch(AUTH, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: `Basic ${basic}` },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: process.env.EBAY_REFRESH_TOKEN!,
+        scope: "https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account",
+      }),
+    });
+    if (!res2.ok) throw new Error(`ebay oauth ${res2.status}: ${(await res2.text()).slice(0, 200)}`);
+    const d2 = await res2.json() as { access_token: string; expires_in: number };
+    _token = { value: d2.access_token, exp: Date.now() + d2.expires_in * 1000 };
+    return _token.value;
+  }
   if (!res.ok) throw new Error(`ebay oauth ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const d = await res.json() as { access_token: string; expires_in: number };
   _token = { value: d.access_token, exp: Date.now() + d.expires_in * 1000 };
@@ -225,4 +241,25 @@ export async function publishToEbay(opts: {
   if (!listingId) throw new Error(`ebay publish: ${JSON.stringify(pub.data).slice(0, 250)}`);
 
   return { listingId: String(listingId), url: `https://sandbox.ebay.com/itm/${listingId}`, categoryId };
+}
+
+// ————— The real sale: if a sandbox buyer actually purchased the listing, the
+// Fulfillment API sees the order. No order → returns null (the UI shows nothing
+// fake). Needs the sell.fulfillment scope on the user consent.
+export interface EbayOrder { orderId: string; buyer: string; totalUSD: number; paid: boolean }
+
+export async function orderForListing(listingId: string): Promise<EbayOrder | null> {
+  const r = await api("GET", "/sell/fulfillment/v1/order?limit=20");
+  if (r.status >= 300) return null;
+  for (const o of r.data?.orders ?? []) {
+    const hit = (o.lineItems ?? []).some((li: any) => String(li.legacyItemId) === String(listingId));
+    if (!hit) continue;
+    return {
+      orderId: String(o.orderId),
+      buyer: String(o.buyer?.username ?? "buyer"),
+      totalUSD: Math.round(Number(o.pricingSummary?.total?.value ?? 0)),
+      paid: o.orderPaymentStatus === "PAID" || o.orderPaymentStatus === "FULLY_REFUNDED" ? true : o.orderPaymentStatus === "PAID",
+    };
+  }
+  return null;
 }

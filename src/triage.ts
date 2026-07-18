@@ -82,3 +82,47 @@ export async function triageClaims(
     summary: String(result.summary ?? "").slice(0, 300),
   };
 }
+
+// ————— The closing conversation: a live-generated negotiation thread for the
+// winning buyer. The agent's lines are model-drafted under the same bounded
+// authority; the buyer's lines are simulated (demo). Ends in a SHIPPED deal —
+// never pickup (a prepaid label is the product's promise).
+export interface DealThread { thread: Array<{ from: "buyer" | "agent"; text: string }>; closedUSD: number }
+
+const CHAT_SYSTEM = `You simulate the FINAL negotiation between a marketplace buyer
+and the seller's AI agent for a demo. Write a realistic, terse chat of 4-6 short
+messages, alternating, starting from the buyer's opening message (given). The agent
+is warm, professional, never desperate. Never invent facts about the item — do not
+claim it is new, boxed, or under warranty; if condition comes up, use the given
+condition word only. Money rules: the agent never goes below the
+private floor and never reveals it; the deal closes at the asking price or between
+floor and asking. The deal MUST close with payment through the marketplace checkout
+and TRACKED SHIPPING (never local pickup, never cash). Last message is the buyer
+confirming payment. Answer ONLY JSON:
+{"thread":[{"from":"buyer","text":"..."},{"from":"agent","text":"..."}],"closedUSD":number}`;
+
+export async function dealThread(
+  itemTitle: string,
+  priceUSD: number,
+  floorUSD: number,
+  buyerName: string,
+  buyerMessage: string,
+  condition?: string,
+): Promise<DealThread | null> {
+  const text = await chat(
+    `Listing: "${itemTitle}" (condition: ${condition || "used"}) at $${priceUSD}, private floor $${floorUSD}. ` +
+    `Buyer "${buyerName}" opened with: "${buyerMessage}"`,
+    { model: MODELS.flash, system: CHAT_SYSTEM, stage: "deal-chat", maxTokens: 500, thinking: false, json: true },
+  );
+  const result = extractJSON<DealThread>(text);
+  if (!result || !Array.isArray(result.thread) || !result.thread.length) return null;
+  const closed = Number(result.closedUSD);
+  return {
+    thread: result.thread.slice(0, 6).map((m) => ({
+      from: m.from === "agent" ? "agent" : "buyer",
+      text: String(m.text).slice(0, 200),
+    })),
+    // bounds enforced in code, as always
+    closedUSD: Number.isFinite(closed) ? Math.min(priceUSD, Math.max(floorUSD, Math.round(closed))) : priceUSD,
+  };
+}

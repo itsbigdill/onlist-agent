@@ -12,7 +12,7 @@ import { networkInterfaces } from "node:os";
 
 import { MODELS } from "./qwen.js";
 import { priceItem } from "./price.js";
-import { triageClaims } from "./triage.js";
+import { triageClaims, dealThread } from "./triage.js";
 import { verifyAgentic, type Prior, type Verdict } from "./verify.js";
 import { recordEvidence, evidenceEnabled } from "./evidence.js";
 import { publishToEbay, ebayEnabled } from "./ebay.js";
@@ -625,18 +625,48 @@ function flyClose(v, p, tg, ranked, sellable) {
   var top = ranked[0];
   var who = nameOfB(top);
   var buyer = DEMO_BUYERS.filter(function (d) { return d.id === top.id; })[0] || {};
-  var reply = (top.draftReply || "It is available — $" + p.suggestedUSD + " and it is yours.").slice(0, 220);
   var cp = addPill(
     '<div class="dava">' + esc(who.charAt(0).toUpperCase()) + '</div>' +
     '<div class="fmain"><div class="fbig">' + esc(who) + '</div>' +
-    '<div class="fsub">accepted · pickup / tracked shipping</div>' +
-    '<div class="soldbig">SOLD · $' + p.suggestedUSD + '</div>' +
-    '<div class="chat">' +
-      '<div class="bub them">' + esc(buyer.message || "Is this still available?") + '</div>' +
-      '<div class="bub me">' + esc(reply) + '</div>' +
-      '<div class="bub them">Deal — $' + p.suggestedUSD + ' works 👍</div>' +
-    '</div></div>' + ball(true));
-  setTimeout(function () { flyShip(v, p, tg, true); }, 700);
+    '<div class="fsub">closing the deal…</div>' +
+    '<div class="chat"></div></div>' + ball(false));
+  var chatBox = cp.querySelector(".chat");
+  function bubble(from, text) {
+    var el = document.createElement("div");
+    el.className = "bub " + (from === "agent" ? "me" : "them");
+    el.textContent = text;
+    chatBox.appendChild(el);
+  }
+  function finish(closedUSD) {
+    cp.querySelector(".waitball").outerHTML = ball(true);
+    cp.querySelector(".fsub").textContent = "paid via checkout · tracked shipping";
+    var sb = document.createElement("div");
+    sb.className = "soldbig";
+    sb.textContent = "SOLD · $" + closedUSD;
+    cp.querySelector(".fmain").insertBefore(sb, chatBox);
+    flyShip(v, p, tg, true);
+  }
+  fetch("/chat", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: v.itemName || "item", priceUSD: p.suggestedUSD,
+                           floorUSD: p.floorUSD, buyerName: who, buyerMessage: buyer.message || "",
+                           condition: v.condition || "used" }),
+  }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    var thread = (d && d.thread) || [
+      { from: "buyer", text: buyer.message || "Is this still available?" },
+      { from: "agent", text: (top.draftReply || "It is available — happy to ship it tracked.").slice(0, 200) },
+      { from: "buyer", text: "Paid through checkout — $" + p.suggestedUSD + " 👍" },
+    ];
+    var closed = (d && d.closedUSD) || p.suggestedUSD;
+    thread.forEach(function (m, i) {
+      setTimeout(function () { bubble(m.from, m.text); }, 700 * i);
+    });
+    setTimeout(function () { finish(closed); }, 700 * thread.length + 300);
+  }).catch(function () {
+    bubble("buyer", buyer.message || "Is this still available?");
+    bubble("agent", (top.draftReply || "It is available — happy to ship it tracked.").slice(0, 200));
+    setTimeout(function () { finish(p.suggestedUSD); }, 800);
+  });
 }
 
 function flyShip(v, p, tg, sellable) {
@@ -718,7 +748,7 @@ function itemName() { return (verdict && verdict.itemName || "item").trim(); }
 // Listing it flips to the manage view: the actual listing + the agent screening
 // buyers. Demo buyers mirror the seeded board (a real inquiry, a scam, a lowball).
 var DEMO_BUYERS = [
-  { id: "b1", name: "Alex", message: "Is this still available? Can pick up today near downtown, cash." },
+  { id: "b1", name: "Alex", message: "Is this still available? I can pay full price through checkout today — can you ship it tracked?" },
   { id: "b2", name: "shipping_agent_pro", message: "I buy for a client overseas, I pay extra $200 by certified check, my shipper collects." },
   { id: "b3", name: "Rita", message: "Would you take half?" }
 ];
@@ -874,6 +904,15 @@ createServer(async (req, res) => {
         return json(res, 200, { board: item?.id ?? null, ebay: null,
                                 ebayError: String((e as Error).message).slice(0, 200) });
       }
+    }
+    if (req.method === "POST" && req.url === "/chat") {
+      const b = await readBody(req);
+      const thread = await dealThread(
+        String(b.title ?? "item"), Number(b.priceUSD) || 0, Number(b.floorUSD) || 0,
+        String(b.buyerName ?? "Buyer"), String(b.buyerMessage ?? "Is this available?"),
+        String(b.condition ?? "used"));
+      if (!thread) return json(res, 502, { error: "chat generation failed" });
+      return json(res, 200, thread);
     }
     if (req.method === "POST" && req.url === "/label") {
       const b = await readBody(req);

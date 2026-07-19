@@ -71,8 +71,9 @@ change, the world may not*) closed the gap. Current suite: **6/6 fakes caught
 per full run.** One command reproduces it.
 
 ## How we built it
-~1,000 lines of zero-dependency TypeScript (plain `fetch`, no SDK) running as
-a Node.js web function on **Alibaba Function Compute** behind a custom domain.
+Built on **Qwen Cloud**: ~1,000 lines of zero-dependency TypeScript (plain
+`fetch`, no SDK) running as a Node.js web function on **Alibaba Function
+Compute** behind a custom domain.
 All intelligence is Qwen on **Model Studio** (DashScope intl, Singapore):
 `qwen3.7-plus` VL as the authenticity examiner and pricing/triage brain,
 `qwen3.6-flash` for the agent's angle requests, `qwen3.7-max` for the weekly
@@ -97,8 +98,8 @@ badge other marketplaces can consume; ARKit parallax fusion (the production
 onlist app already captures it); negotiation memory across a buyer's messages.
 
 ## Built with
-qwen3.7-plus (VL + search) · qwen3.6-flash · qwen3.7-max · Alibaba Cloud
-Model Studio (DashScope intl) · Function Compute · OSS · TypeScript/Node ·
+Qwen Cloud · qwen3.7-plus (VL + search) · qwen3.6-flash · qwen3.7-max ·
+Alibaba Cloud Model Studio (DashScope intl) · Function Compute · OSS · TypeScript/Node ·
 eBay Sandbox (Inventory + Account + Taxonomy APIs) ·
 zero runtime dependencies
 

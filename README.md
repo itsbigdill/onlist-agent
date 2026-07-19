@@ -3,7 +3,7 @@
 **Photograph a thing — and it's sold. The agent shows you the range it will
 sell for; one tap delegates the rest: it lists, negotiates inside your range,
 closes the deal — and the prepaid shipping label lands in your email.**
-Powered by Qwen on Alibaba Cloud.
+Powered by Qwen Cloud (Qwen on Alibaba Cloud).
 
 Selling second-hand dies in the boring middle: what is it worth, writing the
 listing, the inbox full of scammers and lowballs. onlist-agent is an autopilot

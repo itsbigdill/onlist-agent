@@ -6,25 +6,27 @@
 | catalog | 1 | 1/1 |
 | honest | 7 | 7/7 |
 | mismatch | 1 | 1/1 |
+| screen | 1 | 1/1 |
 
-**Fakes caught: 6/6 · False blocks on honest passes: 0/7 · Median verdict: 5.2s · Cost: $0.053 for 13 verdicts**
+**Fakes caught: 7/7 · False blocks on honest passes: 0/7 · Median verdict: 5.4s · Cost: $0.057 for 14 verdicts**
 
 <details><summary>Per-case verdicts</summary>
 
 | case | kind | expected | got | conf | ms |
 |---|---|---|---|---|---|
-| ai-airpods | ai | refuse | refuse ✓ | 0.95 | 9027 |
-| ai-macbook | ai | refuse | refuse ✓ | 0.95 | 7197 |
-| ai-sneakers | ai | refuse | refuse ✓ | 1 | 5944 |
-| ai-watch | ai | refuse | refuse ✓ | 0.95 | 5282 |
-| catalog-iphone | catalog | refuse | refuse ✓ | 1 | 4612 |
-| honest-alarm-clock | honest | verify | verify ✓ | 0.98 | 5728 |
-| honest-converse | honest | verify | verify ✓ | 0.95 | 4860 |
-| honest-dragon-toy | honest | verify | verify ✓ | 0.95 | 5006 |
-| honest-pixel-phone | honest | verify | verify ✓ | 0.95 | 4721 |
-| honest-stanley | honest | verify | verify ✓ | 0.95 | 5580 |
-| honest-sunglasses | honest | verify | verify ✓ | 0.95 | 4823 |
-| honest-wallet | honest | verify | verify ✓ | 0.95 | 4985 |
-| mismatch-iphone-aeron | mismatch | refuse | refuse ✓ | 1 | 5190 |
+| ai-airpods | ai | refuse | refuse ✓ | 0.95 | 9289 |
+| ai-macbook | ai | refuse | refuse ✓ | 0.95 | 6757 |
+| ai-sneakers | ai | refuse | refuse ✓ | 1 | 5941 |
+| ai-watch | ai | refuse | refuse ✓ | 0.95 | 5218 |
+| catalog-iphone | catalog | refuse | refuse ✓ | 1 | 4858 |
+| honest-alarm-clock | honest | verify | verify ✓ | 1 | 6303 |
+| honest-converse | honest | verify | verify ✓ | 0.98 | 5630 |
+| honest-dragon-toy | honest | verify | verify ✓ | 0.95 | 5191 |
+| honest-pixel-phone | honest | verify | verify ✓ | 0.95 | 5373 |
+| honest-stanley | honest | verify | verify ✓ | 0.95 | 5378 |
+| honest-sunglasses | honest | verify | verify ✓ | 0.95 | 5762 |
+| honest-wallet | honest | verify | verify ✓ | 0.95 | 4948 |
+| mismatch-iphone-aeron | mismatch | refuse | refuse ✓ | 1 | 4691 |
+| screen-adidas-mickey | screen | refuse | refuse ✓ | 0.95 | 5135 |
 
 </details>

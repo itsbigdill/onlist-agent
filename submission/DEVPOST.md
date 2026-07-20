@@ -66,11 +66,11 @@ including **AI-generated listings we produced with qwen-image — the examiner
 is tested against fakes from its own model family.** It didn't start perfect:
 two AI renders initially passed at 0.95 confidence. Bench-driven prompt
 iteration (synthetic tells, then a scene-continuity rule: *the viewpoint may
-change, the world may not*) closed the gap. Current suite: **6/6 fakes caught
-(4 AI renders, catalog re-shot, object mismatch) and 7/7 honest live captures
-passed — 13/13, median verdict 5.2s, $0.053 per full run.** The honest half is
-a real photo session of everyday objects, two angles each; the gate lets them
-all through. One command reproduces it.
+change, the world may not*) closed the gap. Current suite: **7/7 fakes caught
+(4 AI renders, a screen re-shot, a catalog re-shot, an object mismatch) and 7/7
+honest live captures passed — 14/14, median verdict 5.4s, $0.057 per full run.**
+The honest half is a real photo session of everyday objects, two angles each;
+the gate lets them all through. One command reproduces it.
 
 ## How we built it
 Built on **Qwen Cloud**: ~1,000 lines of zero-dependency TypeScript (plain

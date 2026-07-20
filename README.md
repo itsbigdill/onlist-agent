@@ -71,12 +71,13 @@ that rewrites this table:
 | kind | cases | correct |
 |---|---|---|
 | ai (qwen-image renders) | 4 | 4/4 |
+| screen re-shot | 1 | 1/1 |
 | catalog re-shot | 1 | 1/1 |
 | object mismatch | 1 | 1/1 |
 | honest live captures | 7 | 7/7 |
 
-**Fakes caught: 6/6 · False blocks on honest passes: 0/7 · Median verdict:
-5.2s · $0.053 for 13 verdicts**
+**Fakes caught: 7/7 · False blocks on honest passes: 0/7 · Median verdict:
+5.4s · $0.057 for 14 verdicts**
 *(the honest half is a real photo session — 7 everyday objects, two angles
 each; the examiner passed all of them. On the single hardest case — a toy
 photographed top-down then flipped to its underside — the VL model sits right
@@ -177,7 +178,7 @@ bench/             labeled benchmark: cases, harness, AI-fake generator, RESULTS
 ## How we address the judging criteria
 
 - **Technical depth** — a measured anti-fake system (6/6 fakes incl.
-  AI-generated caught, 7/7 honest captures passed, receipts in-repo) with a self-correction loop
+  AI-generated + screen re-shot caught, 7/7 honest captures passed, receipts in-repo) with a self-correction loop
   (the examiner acts on its own uncertainty), delegated negotiation bounded in
   code, an immutable OSS audit trail, and a per-stage cost ledger.
 - **Innovation** — every "photo→listing" tool trusts the photo. This one

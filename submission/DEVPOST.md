@@ -107,6 +107,6 @@ zero runtime dependencies
 
 ## Links (fill in)
 - Live demo: https://agent.onlist.ai
-- Video demo: `<YouTube/Vimeo link>`
+- Video demo: https://www.youtube.com/watch?v=OkqBb9xl1bM
 - Repo: https://github.com/itsbigdill/onlist-agent
 - First production consumer: https://www.onlist.ai

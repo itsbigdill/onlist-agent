@@ -1,91 +1,96 @@
 # onlist-agent — demo video script (~2:30)
 
-Goal: the judge sees an AUTOPILOT — one capture in, a live listing with
-screened buyers out, hands-free — and then the twist that makes it
-trustworthy: it refuses to fly fakes. Record the phone screen
-(agent.onlist.ai) for the main flow + a short laptop cut for the receipts.
+Goal: the judge sees an AUTOPILOT — one photo session in, a real eBay listing
+and a payout out, hands-free — then the twist that makes it trustworthy: it
+refuses to fly fakes. Record the phone screen (agent.onlist.ai) for the main
+flow + a short laptop cut for the receipts.
 
 Setup before recording:
-- Phone with https://agent.onlist.ai open (fresh session).
-- A real object on the desk (e.g. headphones or a watch).
+- Phone with https://agent.onlist.ai open (fresh session, camera permission
+  already granted on a prior visit so the flow is instant).
+- A real object on the desk (headphones / watch / gadget).
 - A product photo opened FULL-SCREEN on your monitor (for the fool-me beat).
-- Laptop tab with the GitHub README (benchmark table + architecture diagram).
+- Laptop tab with the GitHub README (bench table + architecture diagram).
 
 ---
 
-### 0:00–0:15 — The premise
-> "Everyone owns things they'd sell if it weren't such a hassle — the pricing
-> research, the listing, the inbox full of scammers. This is onlist-agent:
-> photograph a thing, and it's sold. Live on Alibaba Cloud."
+### 0:00–0:12 — The premise
+> "Everyone owns things they'd sell if it weren't such a hassle. This is
+> onlist — an autopilot agent: photograph a thing, and it's sold. Live on
+> Alibaba Cloud."
 
-- Phone: the landing with the camera prompt.
+- Phone: the home screen — the Scan-to-sell square, the Sold history pill.
 
-### 0:15–1:10 — THE AUTOPILOT (the money shot — one unbroken take)
+### 0:12–0:30 — The capture
 > "Watch. Two photos."
 
-- Photograph the real object, two angles. The agent examines it and comes back
-  with the OFFER screen:
-> "It verified the thing is real, sized the live market, and made me an offer:
-> this sells for $520 to $650. That range is the whole contract — my one
-> decision."
-- Tap **Sell it for me →** and DON'T touch the phone. The timeline checks
-  itself off on camera:
-  - ✓ Listed — **live on eBay sandbox · #110…** (a real listing id)
-  - ✓ 3 buyers handled · 1 countered in-range
-  - ✓ **SOLD to Alex for $650**
-- The sold screen appears with the shipping label.
-> "While I did nothing: it created a real eBay listing — that number is a
-> live listing id from eBay's Inventory API, not a mock — declined the 'certified check' scammer FOR
-> me, countered the lowballer at $575 — never below my range, which is
-> enforced in code, not in a prompt — and closed with the real buyer. And the
-> prepaid shipping label? Already in my email. My next touch is a box."
+- Tap the square → the fullscreen camera opens. Shutter → "Use this photo".
+  The photo lands in its own square; one more angle → second square fills.
+- Verification runs by itself.
 
-### 1:10–1:20 — Underline the delegation
-- Point at the label on screen.
-> "One decision — the range. Everything after that tap was the agent's job,
-> inside bounds that are written down."
+### 0:30–0:50 — The offer (the one decision)
+> "It checked the thing is real, sized the live market, and made me an offer:
+> this sells for 340 to 380. That range is my ONE decision in this whole flow."
 
-### 1:20–1:50 — Why you can trust an autopilot: the fake test
+- The offer screen: sticker fan of your photos, the gradient price range.
+- Tap **Sell it for me →** and put the phone DOWN in frame if you can — the
+  point is you're not touching it.
+
+### 0:50–1:30 — THE AUTOPILOT (one unbroken take, pills stack up)
+> "Now it flies itself. Look — that's a real eBay listing, that number is a
+> live listing id from eBay's Inventory API."
+
+- The eBay pill appears: colored logo, #id, green check, arrow.
+> "It finds buyers, filters the spam, counters the lowballs — never below my
+> range, that's enforced in code, not in a prompt."
+
+- Counters tick: inquiries / spam ✕ / countered / in range.
+- The deal pill: the buyer, the CHAT — real replies the agent drafted — and
+  SOLD.
+> "And here's the part I love: the money. Sold, minus the marketplace fee —
+> that's what lands in my bank."
+
+- The payout pill counts up. Then the label pill.
+> "Shipping label's ready. Download, print, stick it on a box. That's my
+> whole job now."
+
+- Tap Download — show the label file.
+
+### 1:30–1:50 — Why you can trust it: the fake test
 > "But an autopilot that lists things for you had better not list lies.
 > Let's try to scam it."
 
-- Point the phone at the **monitor** with the product photo. Shoot 2 angles.
+- Point the phone at the MONITOR with a product photo. Two shots.
 - **Not real ✕ — Photo of a screen.** Open "Why?" and read one line.
-> "Caught the moiré and the missing parallax. Refused to fly it. In the repo
-> there's a benchmark — it also catches AI-generated listing photos, including
-> fakes made with qwen-image, its own model family: six out of six."
-- (2-second laptop cut: README benchmark table.)
+> "Caught it. In the repo there's a benchmark — it also catches AI-generated
+> photos, made with its own model family."
 
-### 1:50–2:10 — The agentic beat (if it triggers — never fake it)
-- If during any capture the amber **"One more angle"** panel appears:
-> "And when it's unsure, it doesn't guess — it tells me exactly which shot
-> would settle it, and re-examines."
-- (Provoke it deliberately if you want: two near-identical shots without
-  moving the phone. If it doesn't trigger, cut this beat or show the amber
-  panel screenshot from the README.)
+### 1:50–2:05 — Receipts (laptop cut)
+- README bench table close-up + architecture diagram, 2–3 seconds each.
+> "Everything runs on Qwen on Alibaba Cloud — the examiner, the pricing, the
+> negotiation. Every call is metered; a full session costs about five cents."
 
-### 2:10–2:30 — Receipts + close
-- (Laptop cut: cost ledger output, architecture diagram.)
-> "All of it runs on Alibaba Cloud — Qwen VL as the examiner, Function Compute
-> hosting, every call metered: this whole session cost about five cents.
-> Photograph a thing — and it's sold. onlist-agent. Try it:
-> agent dot onlist dot ai."
+### 2:05–2:20 — The history + close
+- Phone: the Sold pill → the history screen with past sales.
+> "Every sale stays on the record. Photograph a thing — and it's sold.
+> onlist. Try it: agent dot onlist dot ai."
 
 ---
 
 ## Shot checklist
-- [ ] Landing with camera prompt
-- [ ] The unbroken take: 2 photos → OFFER ($X–Y) → tap → timeline → SOLD
-- [ ] The shipping-label card + "emailed to you" note
-- [ ] Buyers recap: scam declined / Rita countered at $XXX / deal closed
+- [ ] Home: Scan-to-sell square + Sold pill
+- [ ] Fullscreen camera → Use this photo → two squares filled
+- [ ] Offer: sticker fan + $X–Y + Sell it for me
+- [ ] The unbroken pill cascade: eBay #id → counters → chat → SOLD → payout → label
+- [ ] Label Download (file appears)
 - [ ] Monitor re-shot → Not real ✕ + reasoning
-- [ ] README bench table close-up (6/6)
-- [ ] (bonus) "One more angle" amber panel
-- [ ] Cost ledger + architecture diagram
+- [ ] Laptop: bench table + architecture diagram
+- [ ] History screen
+- [ ] (bonus) amber "one more angle" if it triggers — never fake it
 
 ## Tips
-- The unbroken autopilot take is the whole pitch — rehearse it once so the
-  cascade lands in one clean shot (~30-40s wall-clock).
+- The pill cascade is the money shot — rehearse once; it runs ~35–50s
+  wall-clock. Don't touch the phone during it.
 - Fool-me comes AFTER the autopilot: first the magic, then the trust.
-- Native screen recording, voice-over later; captions help judges with sound off.
-- Total under 3:00.
+- Vertical video worked great for drama916 — same format fits here.
+- Captions on; total under 3:00.

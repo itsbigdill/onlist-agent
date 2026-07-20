@@ -109,4 +109,5 @@ zero runtime dependencies
 - Live demo: https://agent.onlist.ai
 - Video demo: https://www.youtube.com/watch?v=OkqBb9xl1bM
 - Repo: https://github.com/itsbigdill/onlist-agent
+- Build story (dev.to): https://dev.to/denys_illichov_fb35149166/i-built-an-ai-agent-that-sells-your-stuff-online-and-manages-the-listings-597g
 - First production consumer: https://www.onlist.ai

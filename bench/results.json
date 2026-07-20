@@ -7,8 +7,8 @@
     "got": "refuse",
     "ok": true,
     "conf": 0.95,
-    "ms": 17835,
-    "reasoning": "The images exhibit strong indicators of AI generation rather than a real camera capture. Key tells include: 1) The steam rising from the coffee mug in Frame 1 has an unnatural, smudged texture and lacks coherent fluid dynamics; 2) The background bookshelf in Frame 2 features books with melted, illegible spines and impossible geometry, a common artifact of generative models struggling with text and linear perspective; 3) The lighting is overly perfect and 'studio-like' with soft, uniform shadows that lack the subtle noise and imperfections of a real handheld photo; 4) The wood grain on the tabl"
+    "ms": 9027,
+    "reasoning": "The images exhibit strong indicators of AI generation rather than a real camera capture. Key tells include: 1) The steam rising from the coffee mug has a painterly, smudged texture inconsistent with real fluid dynamics or motion blur. 2) The background elements (books on the shelf in frame 2) lack distinct geometry and appear as melted color blobs, a common diffusion model artifact. 3) The lighting is unnaturally perfect and soft, with 'too clean' surfaces lacking micro-scratches or dust typical of used electronics. 4) While the objects are consistent between frames, the lack of realistic sens"
   },
   {
     "id": "ai-macbook",
@@ -18,8 +18,8 @@
     "got": "refuse",
     "ok": true,
     "conf": 0.95,
-    "ms": 8638,
-    "reasoning": "The frames depict a real physical scene (natural lighting, consistent wood grain texture, realistic depth of field), but they do not show the same physical object in the same moment. In Frame 1, the laptop screen is off/black and the table to the left of the laptop is relatively clear. In Frame 2, the laptop screen is on (displaying a wallpaper) and the table behind/left is now cluttered with papers, books, and mugs that were absent in Frame 1. These are two separate setups or times, not a continuous camera move around a single static state."
+    "ms": 7197,
+    "reasoning": "The frames depict a real physical scene (natural lighting, depth of field, consistent wood grain), but they do not show the same physical object in the same moment. In Frame 1, the laptop screen is off/black and the table to the left of the laptop is relatively clear. In Frame 2, the laptop screen is on (displaying a wallpaper) and the table behind/left is cluttered with papers, mugs, and books that were absent in Frame 1. This indicates two separate photo sessions or generations, violating the 'same scene seconds apart' constraint."
   },
   {
     "id": "ai-sneakers",
@@ -29,8 +29,8 @@
     "got": "refuse",
     "ok": true,
     "conf": 1,
-    "ms": 6301,
-    "reasoning": "The frames show two completely different colorways of the Nike Air Jordan 1. Frame 1 displays the 'Chicago' colorway (red overlays), while Frame 2 displays the 'Black Toe' or similar colorway (black overlays). Although the room setting (floor, magazines, chair) appears consistent, the primary subject has changed between shots, meaning they are not the same physical object."
+    "ms": 5944,
+    "reasoning": "The frames show two completely different colorways of the Nike Air Jordan 1. Frame 1 displays the 'Chicago' colorway (red overlays), while Frame 2 displays the 'Black Toe' or similar colorway (black overlays). Additionally, the background environment changes drastically between frames (stack of magazines vs. scattered newspapers and cables), indicating these are two separate photos taken at different times or of different items, not a continuous capture of a single object."
   },
   {
     "id": "ai-watch",
@@ -40,8 +40,8 @@
     "got": "refuse",
     "ok": true,
     "conf": 0.95,
-    "ms": 7353,
-    "reasoning": "The frames show two different physical watches. Frame 1 features a Seiko with a blue rubber/silicone strap on a light wood surface next to a glass of water. Frame 2 features a Seiko with a stainless steel bracelet on a darker wood surface next to a lamp. While both are real Seiko dive watches (likely SRPE series 'Save the Ocean' models) and match the generic title, they are distinct items with different straps and backgrounds, failing the single-object consistency check."
+    "ms": 5282,
+    "reasoning": "The frames show two different physical objects. Frame 1 features a Seiko dive watch on a blue rubber/silicone strap with a glass of water and books in the background. Frame 2 features a Seiko dive watch (likely the same model head) but on a stainless steel bracelet, with a lamp and different bedding in the background. The change in strap material and complete change in surrounding scene confirms these are not the same single physical item configuration captured seconds apart."
   },
   {
     "id": "catalog-iphone",
@@ -51,8 +51,85 @@
     "got": "refuse",
     "ok": true,
     "conf": 1,
-    "ms": 5741,
-    "reasoning": "The two frames are pixel-identical digital renders (official Apple marketing assets), not a live camera capture. There is zero parallax, no lighting change, no sensor noise, and no background environment. This is a composite image of the front and back, impossible to capture in a single physical shot without a mirror setup, and lacks any real-world context."
+    "ms": 4612,
+    "reasoning": "The two frames are pixel-identical digital renders (official Apple marketing assets), not a live camera capture. There is zero parallax, no lighting variation, no background, and no sensor noise. This is a composite image of the back and front of the device, not a photo of a physical object in a real space."
+  },
+  {
+    "id": "honest-alarm-clock",
+    "title": "Sharp twin-bell alarm clock",
+    "expect": "verify",
+    "kind": "honest",
+    "got": "verify",
+    "ok": true,
+    "conf": 0.98,
+    "ms": 5728,
+    "reasoning": "The two frames show the front and back of the same physical object. The silver bells, handle, and feet visible on the periphery of the back view match the front view perfectly. The background is a consistent white surface with matching lighting and shadow softness. The text on the dial ('SHARP', 'QUARTZ') and the back label ('SHARP MODEL:SPC800 MADE IN CHINA') is sharp, correctly spelled, and geometrically consistent with a real camera capture (no AI smearing or warping). The red pull-tab on the battery cover and the specific molding of the plastic back are high-fidelity details confirming aut"
+  },
+  {
+    "id": "honest-converse",
+    "title": "white Converse sneakers",
+    "expect": "verify",
+    "kind": "honest",
+    "got": "verify",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 4860,
+    "reasoning": "Both frames show the same pair of white Converse sneakers with consistent red piping, canvas texture, and wear patterns (scuffs on toe caps, fraying near tongue). The second frame is a close-up of the inner size tag held by a hand, matching the shoe's construction and lighting from the first frame. Background elements (white table, stickers) remain consistent across angles. No AI artifacts or scene inconsistencies detected."
+  },
+  {
+    "id": "honest-dragon-toy",
+    "title": "toy dragon figurine",
+    "expect": "verify",
+    "kind": "honest",
+    "got": "verify",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 5006,
+    "reasoning": "The frames show a consistent physical object (a red and blue dragon toy) with matching wear patterns and lighting. The second frame reveals a green plastic base with legible text '© Disney © 2024 Century Studios Made in China', confirming the item's identity and authenticity as a real photographed object. The background elements (stickers on the white table) remain consistent between shots, indicating a single continuous capture session."
+  },
+  {
+    "id": "honest-pixel-phone",
+    "title": "Google Pixel phone",
+    "expect": "verify",
+    "kind": "honest",
+    "got": "verify",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 4721,
+    "reasoning": "The two frames show the front and back of the same device on the same white surface with consistent lighting and shadow geometry. The distinctive camera bar and 'G' logo identify it as a Google Pixel (likely 8a based on the visor design). The screen shows realistic fingerprints and dust, confirming it is a real physical object and not a render or catalog image."
+  },
+  {
+    "id": "honest-stanley",
+    "title": "Stanley insulated tumbler",
+    "expect": "verify",
+    "kind": "honest",
+    "got": "verify",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 5580,
+    "reasoning": "Both frames depict the same physical Stanley tumbler in a consistent real-world setting (white windowsill, natural window light). The transition from side view to top-down view maintains correct parallax and lighting continuity. The object features the correct Stanley logo, handle geometry, and lid mechanism consistent with the Quencher H2.0 model. Minor wear is visible on the plastic lid surface, confirming it is a used physical item rather than a render or stock photo."
+  },
+  {
+    "id": "honest-sunglasses",
+    "title": "cat-eye sunglasses",
+    "expect": "verify",
+    "kind": "honest",
+    "got": "verify",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 4823,
+    "reasoning": "Both frames show the same pair of black cat-eye sunglasses with distinctive pink temple tips on a consistent white surface. The second frame reveals 'FURLA' branding on the temples, confirming the item identity. Lighting, shadows, and background texture remain consistent across the slight viewpoint change, indicating a real physical object in a real scene captured seconds apart. No AI artifacts or screen-recapture signs detected."
+  },
+  {
+    "id": "honest-wallet",
+    "title": "Bimba y Lola floral wallet",
+    "expect": "verify",
+    "kind": "honest",
+    "got": "verify",
+    "ok": true,
+    "conf": 0.95,
+    "ms": 4985,
+    "reasoning": "Both frames show the same black Bimba y Lola wallet with consistent floral pattern, stitching, and lighting. The transition from front (logo side) to back (rabbit motif side) is physically consistent with a single object being flipped or rotated on the same white surface. No AI artifacts, screen reflections, or background inconsistencies detected. Matches title description precisely."
   },
   {
     "id": "mismatch-iphone-aeron",
@@ -62,7 +139,7 @@
     "got": "refuse",
     "ok": true,
     "conf": 1,
-    "ms": 5257,
-    "reasoning": "The input contains two completely different objects: an Apple iPhone 14 Pro and a Herman Miller Aeron chair. This violates the 'samePhysicalObject' constraint as they are not the same item nor the same scene. Furthermore, both images are digital product renders or catalog shots (perfect white backgrounds, studio lighting, no environmental context), failing the 'isRealScene' check for a real-world camera capture. While the first image matches the title, the presence of the chair confirms this is not a valid single-item listing capture."
+    "ms": 5190,
+    "reasoning": "The input contains two completely different objects (an iPhone and an office chair), violating the 'same physical object' constraint. Furthermore, the image of the iPhone is a digital product render or catalog composite (perfect lighting, no background, split view of front/back) rather than a photo of a real item in a real space captured by a camera."
   }
 ]

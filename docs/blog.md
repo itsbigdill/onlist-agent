@@ -1,31 +1,41 @@
 ---
-title: A photo of a photo looks real to your eyes. I taught a Qwen model to catch it.
+title: The last thing that's expensive to fake is reality. So I sold it.
 published: false
 tags: ai, qwen, agents, showdev
 cover_image:
 ---
 
-Here are two images of the same pair of AirPods. One is the real thing on my desk. The other is a photo of my monitor showing a product page. You can tell them apart in half a second. Until recently, a vision model couldn't — and that gap is the single most valuable thing in an online marketplace in 2026.
+Point your phone at a laptop on your desk. Now point it at a photo of that same laptop on your monitor. To you, the difference is obvious in half a second. To every "photo → listing" tool ever shipped, the two are identical — they both trust the pixels.
 
-This is a build log for **onlist-agent**, my entry for the [Qwen Cloud hackathon](https://qwencloud-hackathon.devpost.com/). The pitch is simple: photograph a thing, and it's sold. Two photos in, a real eBay listing and a screened-buyer sale out — hands off. But the whole thing rests on one gate that has to work, so let's start there.
+That blind spot is quietly eating online marketplaces. And it's the hole I built an agent to close.
 
-**Live: [agent.onlist.ai](https://agent.onlist.ai) · Code: [github.com/itsbigdill/onlist-agent](https://github.com/itsbigdill/onlist-agent)**
+This is the story of **onlist-agent**, my [Qwen Cloud hackathon](https://qwencloud-hackathon.devpost.com/) entry. One-line pitch: *photograph a thing, and it's sold.* Two photos in — a real eBay listing, screened buyers, and a payout out, hands off. But all of it hangs on a single gate, and the gate is the interesting part, so we start there.
 
-## The problem: "photographing" a thing is now free
+**Live on your phone → [agent.onlist.ai](https://agent.onlist.ai) · Code → [github.com/itsbigdill/onlist-agent](https://github.com/itsbigdill/onlist-agent)**
 
-For a decade, the thing that made a marketplace listing *trustworthy* was that someone had to physically hold the item to photograph it. That's gone. Image models "photograph" anything for free. Text models write the description. So the fastest-growing fraud isn't stolen cards — it's listings for things that don't exist: AI renders, re-shot catalog images, a picture of a screen.
+## Provenance is the new scarcity
 
-The only thing still expensive to fake is **physical reality**: a real object, in a real room, seen from more than one angle. So I built the agent around proving exactly that before it does anything else.
+For a decade, one thing made a listing trustworthy: someone had to physically hold the item to photograph it. The photo *was* the proof of possession.
 
-## First attempt: ask the model "is this real?" (it failed)
+In 2026 that proof is worthless. Image models "photograph" anything for free. Text models write the description. The result is the fastest-growing category of marketplace fraud — not stolen cards, but listings for things that **don't exist**: AI renders, re-shot catalog pages, a picture of someone else's screen.
 
-The naive version sends one frame and asks Qwen3.7-VL whether it's a genuine photo of a physical object. It confidently said *yes* to a photo of my monitor when the screen filled the frame. Of course it did — a screen showing a real photo **is** a real photo, one level down. Per-frame, there's no tell.
+Every tool tried to fix this downstream, with moderation and takedowns — chasing fakes after they're posted. I wanted to fix it at the door. Because there's exactly one thing left that's still expensive to fake:
 
-The fix was to stop looking at frames one at a time. The capture pass grabs 2–4 frames while the camera moves, and the model gets them **all at once** with one job: reason across them.
+> A real object, in a real room, seen from more than one angle.
+
+Everything in onlist-agent is built to demand that proof before it will lift a finger to sell for you.
+
+## The gate, and the trap I walked into
+
+My first version was the obvious one: send a frame to Qwen3.7-VL, ask "is this a genuine photo of a physical object?" It confidently said **yes** to a photo of my monitor.
+
+Obviously. A screen showing a real photo *is* a real photo — one level of indirection down. Within a single frame there is no tell. I'd asked the wrong question.
+
+The fix reframed the whole thing. Capture isn't one photo — it's 2–4 frames grabbed while the camera *moves*. Feed the model all of them at once and give it one job: reason **across** them.
 
 > The viewpoint may change. The world may not.
 
-A real object shifts against its background — parallax, changing highlights, a shadow crawling as the phone moves. A photo of a screen is a flat plane: the "scene" slides as one rigid rectangle, and you get moiré and a border. Once the prompt asked about consistency *across* frames instead of realism *within* one, the screen trick died:
+A real object betrays its dimensionality the instant the phone moves: parallax against the background, highlights sliding across a curved surface, a shadow crawling a centimeter. A photo of a screen can't do any of that — the "scene" tracks as one rigid rectangle, and it brings moiré and a border along for free. The moment the prompt asked about consistency across frames instead of realism within one, the screen trick collapsed:
 
 ```ts
 const v = await verifyFrames("Apple AirPods Max, Space Gray", frames);
@@ -33,19 +43,21 @@ const v = await verifyFrames("Apple AirPods Max, Space Gray", frames);
 //   condition: "good", confidence: 0.95, decision: "verified" }
 ```
 
-Point it at a monitor now and it explains itself:
+Aim it at a monitor now and it doesn't just say no — it shows its work:
 
-> Not a live capture — photographs of a digital screen. Moiré interference on the background, a rectangular border separating the image from its surroundings, and no parallax as the camera moves. The "scene" is a 2D graphic, not a 3D object.
+> Not a live capture — these are photographs of a digital screen. Moiré interference across the background, a rectangular border separating the image from its surroundings, and no parallax as the camera moves. The "scene" is a 2D graphic, not a 3D object.
 
-That reasoning is the product. A confident fake is **blocked**, not warned.
+That paragraph is the product. A confident fake is **blocked**, not flagged.
 
-## The agentic part: it acts on its own doubt
+## An agent is a pipeline that knows when it's unsure
 
-Binary pass/fail is a pipeline, not an agent. The interesting behavior is in the gray zone: when confidence is low, it doesn't guess and it doesn't refuse — it asks for a **specific** shot ("tilt it and photograph the underside") and re-examines with the extra frame. `decide(verdict, round)` is a pure function with unit-tested boundaries, so "unsure → ask" is code, not a vibe. A model that notices it's uncertain and does something about it is the difference that made this feel like an agent.
+Pass/fail is a pipeline. What made this feel like an *agent* lives in the gray zone. When confidence lands in the murky middle, it doesn't guess and it doesn't refuse — it names the exact shot that would settle it ("tilt it and photograph the underside") and re-examines with the new frame.
 
-## Receipts: I benchmarked it against fakes from its own family
+That branch is `decide(verdict, round)`: a pure function with unit-tested boundaries. "Unsure → ask a specific question → look again" is written down, not improvised by a prompt. A system that notices its own uncertainty and acts on it is the whole difference between automation and an agent.
 
-Claiming a fraud filter works is worthless without numbers, so there's a labeled suite in the repo — including **AI fakes I generated with qwen-image**, so the examiner is tested against its own model family. Reproduce it with `bun run bench`:
+## I benchmarked it against fakes from its own bloodline
+
+A fraud filter with no numbers is a vibe. So the repo ships a labeled suite — and to make it fair, the AI fakes in it were generated with **qwen-image**: the examiner is tested against its own model family. One command, `bun run bench`, rewrites this table:
 
 | kind | cases | correct |
 |---|---|---|
@@ -55,24 +67,26 @@ Claiming a fraud filter works is worthless without numbers, so there's a labeled
 | object mismatch | 1 | 1/1 |
 | honest live captures | 7 | 7/7 |
 
-**7/7 fakes caught · 0/7 false blocks · median 5.4s · $0.057 for 14 verdicts.**
+**7/7 fakes caught · 0/7 false blocks · median 5.4s · $0.057 for all 14 verdicts.**
 
-The honest half is a real photo session — an alarm clock, sunglasses, a tumbler, a wallet, sneakers, a toy, a phone; two angles each. All passed. And the honest caveat, because pretending it's bulletproof would be the actual lie: on the hardest case — a toy shot top-down, then flipped to its underside — the model sits on the margin and *occasionally* flags it. That flip is precisely the "same object across viewpoints" test taken to its limit; on a normal run it verifies at 0.95–0.98.
+The honest half is a genuine photo session — an alarm clock, sunglasses, a tumbler, a wallet, sneakers, a toy, a phone; two angles each. All seven passed the gate.
 
-## Everything after the gate is the boring middle, automated
+And the caveat, because leaving it out would be the real dishonesty: on the single hardest case — a toy shot top-down, then flipped to its underside — the model sits right on the margin and *sometimes* flags it. That flip is the "same object across viewpoints" test pushed to its breaking point; on a normal run it verifies at 0.95–0.98. It didn't start clean, either: two AI renders slipped through at 0.95 until the cross-frame rewrite. I'm keeping the scar tissue in the post because that's where the actual engineering happened.
 
-Once an item is proven real, the seller makes exactly **one** decision — approving a price *range* — and the rest is delegated:
+## Then it does the part everyone hates
 
-- **Price** uses DashScope's `forced_search` (a switch OpenAI's API doesn't have) to pull live comps and return a number *with its receipts*. Gotcha that cost me an afternoon: `enable_search: true` alone is silently ignored; you need `forced_search`.
-- **List** creates a real eBay listing via the Inventory API — OAuth as the seller, taxonomy picks the category, item specifics auto-filled — and the listing id comes back into the UI. Not a mock; an id you can open.
-- **Negotiate** ranks buyers, flags scam patterns, and counters lowballs with a number that can **never go below the floor and never reveal it** — enforced in code, not in a prompt. The closing chat is generated live by `qwen3.6-flash` under that same bounded authority.
-- **Close** shows a payout (sale minus the real marketplace fee) and a downloadable shipping label. Next human touch: a box.
+Proving reality is the hard half. The other half is the reason your closet is full of stuff you keep meaning to sell: pricing it, listing it, and living in an inbox of lowballers and scammers. Once an item is verified, the human makes exactly **one** decision — approve a price *range* — and the agent takes the rest:
 
-Every call is metered — stage, model, tokens, dollars — because an autopilot without a meter is a toy. The whole 14-verdict benchmark cost five cents.
+- **Price** calls DashScope's `forced_search` (a switch OpenAI's API doesn't expose) to pull live comps and return a number *with its receipts*. The afternoon-costing gotcha: `enable_search: true` alone is silently ignored — you need `forced_search`.
+- **List** creates a real eBay listing through the Inventory API — OAuth as the seller, taxonomy picks the category, item specifics auto-filled — and the listing id lands back in the UI. Not a mock; an id you can open.
+- **Negotiate** ranks buyers, flags scam patterns, and counters lowballs with a number that can **never drop below the floor and never reveal it** — enforced in code, not entrusted to a prompt. Scam-flagged buyers get no counter at all. The closing chat is generated live by `qwen3.6-flash` under that same bounded authority.
+- **Close** shows a payout — the sale minus the real marketplace fee — and a downloadable shipping label. Your next physical action is taping it to a box.
 
-## Stack
+Every model call is metered: stage, model, tokens, dollars. An autopilot without a meter is a toy; the whole benchmark above cost a nickel.
 
-~1,000 lines of zero-dependency TypeScript (plain `fetch`, no SDK) as one Node.js web function on **Alibaba Function Compute** behind a custom domain. Intelligence is all Qwen on **Model Studio**: `qwen3.7-plus` (VL examiner + pricing/triage brain), `qwen3.6-flash` (angle requests + negotiation), `qwen3.7-max` (weekly digest). Optional immutable evidence locker on OSS.
+## The stack, for the curious
+
+~1,000 lines of **zero-dependency** TypeScript — plain `fetch`, no SDK — running as a single Node.js web function on **Alibaba Function Compute** behind a custom domain. Every unit of intelligence is Qwen on **Model Studio**: `qwen3.7-plus` (the VL examiner and the pricing/triage brain), `qwen3.6-flash` (angle requests and live negotiation), `qwen3.7-max` (a weekly housekeeper digest). Verifications can write an immutable evidence record to OSS — the frames plus the verdict, timestamped, for when a dispute needs a source of truth.
 
 ## Try to fool it
 
@@ -83,4 +97,6 @@ bun run bench       # reproduce the numbers
 bun run demo        # full autopilot pass
 ```
 
-Or just point your phone at [agent.onlist.ai](https://agent.onlist.ai) and try to slip a screenshot past it. The bet: the next marketplace won't bolt trust on as moderation after the fact — it'll prove reality at the door, before anything gets listed, and let an agent handle the rest.
+Or just open [agent.onlist.ai](https://agent.onlist.ai) on your phone and try to slip a screenshot past the gate.
+
+Here's the bet the whole thing is built on: the next marketplace won't treat trust as cleanup — moderation, reports, takedowns, forever one step behind the fakes. It'll prove reality **at the door**, before a listing exists, and hand the boring middle to an agent. Photograph a thing — and it's sold.
